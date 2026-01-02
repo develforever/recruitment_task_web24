@@ -17,7 +17,7 @@ return new class extends Migration
             $table->integer('total_records')->default(0);
             $table->integer('successful_records')->default(0);
             $table->integer('failed_records')->default(0);
-            $table->string('status', 20)->default('processing');
+            $table->string('status', 20)->default(\App\Models\Import::STATUS_PROCESSING);
             $table->timestamps();
         });
     }

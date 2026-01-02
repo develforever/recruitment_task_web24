@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('import_id')->constrained('imports')->cascadeOnDelete();
             $table->string('transaction_id');
             $table->text('error_message');
-            $table->timestamp('created_at')->useCurrent();
+            $table->timestamps();
         });
     }
 

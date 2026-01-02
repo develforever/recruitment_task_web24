@@ -14,10 +14,11 @@ return new class extends Migration
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
             $table->string('transaction_id')->unique();
-            $table->string('account_number');
+            $table->string('account_number', 34);
             $table->date('transaction_date');
-            $table->decimal('amount', 15, 2);
-            $table->string('currency', 3);
+            $table->unsignedBigInteger('amount');
+            $table->string('currency', 3)->index();
+            $table->foreignId('import_id')->nullable()->constrained('imports')->nullOnDelete();
             $table->timestamps();
         });
     }
