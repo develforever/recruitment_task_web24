@@ -3,8 +3,9 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { imports } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
-import { ref, onMounted, defineProps, watch } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { formatDate } from '@/helpers/date'
+import axios from 'axios'
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -13,10 +14,6 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const props = defineProps({
-  token: String
-});
-
 const rows = ref([])
 const loading = ref(true)
 const error = ref(null)
@@ -24,37 +21,32 @@ const page = ref(1);
 
 const fetchImports = async () => {
   loading.value = true
+  error.value = null
   try {
-    const response = await fetch(`/api/imports?page=${page.value}`, {
-      credentials: 'include',
-      headers: {
-        'Authorization': `Bearer ${props.token}`,
-        'Accept': 'application/json'
-      }
-    })
-    if (!response.ok) throw new Error('Błąd pobierania importów')
-    const data = await response.json()
+    
+    const { data } = await axios.get(`/api/imports?page=${page.value}`)
     rows.value = data
   } catch (e) {
-    error.value = e.message
+    error.value = e.response?.data?.message || e.message || 'Błąd pobierania importów'
+    if (e.response?.status === 401) {
+      window.location.href = '/login'
+    }
   } finally {
     loading.value = false
   }
 }
 
-onMounted(async () => {
+onMounted(() => {
  fetchImports()
 })
 
-
-watch(() => page.value, () => {
+watch(page, () => {
   fetchImports()
 })
-
 </script>
 
 <template>
-  <Head title="Dashboard" />
+  <Head title="Imports" />
 
   <AppLayout :breadcrumbs="breadcrumbs">
     <div
@@ -79,7 +71,7 @@ watch(() => page.value, () => {
         </thead>
         <tbody class="divide-y border-t border-gray-200 dark:border-gray-700">
           <tr class="even:bg-gray-200/10" v-for="(imp, index) in rows.data" :key="imp.id">
-            <td>{{ (index + 1) + (page - 1) * rows.per_page }}</td>
+            <td>{{ index + 1 + (page - 1) * rows.per_page }}</td>
             <td>{{ imp.id }}</td>
             <td>{{ imp.file_name }}</td>
             <td>{{ imp.successful_records }} / {{ imp.failed_records }}</td>
@@ -98,9 +90,9 @@ watch(() => page.value, () => {
           <tr colspan="6">
             <p>
               Total Imports: {{ rows.total }}<br />
-              <button class="mr-2" v-if="rows.prev_page_url" @click="page--">Prev</button>
+              <button class="mr-2" v-if="rows.prev_page_url" @click="page--" :disabled="loading">Prev</button>
               <button class="mx-2">{{ page }}</button>
-              <button class="ml-2" v-if="rows.next_page_url" @click="page++">Next</button>
+              <button class="ml-2" v-if="rows.next_page_url" @click="page++" :disabled="loading">Next</button>
             </p>
           </tr>
         </tfoot>

@@ -21,71 +21,37 @@ class ImportService
     public function processImport(Import $import, string $filePath, User $user): void
     {
 
-        DB::transaction(function () use ($import, $filePath, $user) {
 
-            $fileName = $import->file_name;
-            $contents = $content = Storage::get($filePath);
-            $records = [];
-            $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+        $fileName = $import->file_name;
+        $contents = Storage::get($filePath);
+        $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
 
 
-            try {
-                if ($ext === 'csv') {
-                    $records = (new CsvParser())->parse($contents);
-                } elseif ($ext === 'json') {
-                    $records = (new JsonParser())->parse($contents);
-                } elseif ($ext === 'xml') {
-                    $records = (new XmlParser())->parse($contents);
-                } else {
-                    throw new \Exception('Unsupported file type');
-                }
-            } catch (\Throwable $e) {
-                Log::error('Import parsing failed', [
-                    'import_id' => $import->id,
-                    'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString()
-                ]);
-                $import->update(['status' => Import::STATUS_FAILED]);
-                throw new \Exception('Failed to parse file: ' . $e->getMessage());
-            }
+        try {
+            $records = $this->parseRecords($ext, $contents);
+        } catch (\Throwable $e) {
+            Log::error('Import parsing failed', [
+                'import_id' => $import->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            $import->update(['status' => Import::STATUS_FAILED]);
+            throw new \RuntimeException('Failed to parse file: ' . $e->getMessage(), previous: $e);
+        }
 
-            $total = count($records);
-            $success = 0;
-            $failed = 0;
+        $total = count($records);
+        $success = 0;
+        $failed = 0;
 
-            $existingIds = Transaction::whereIn(
-                'transaction_id',
-                array_column($records, 'transaction_id')
-            )->pluck('transaction_id')->toArray();
+        $existingIds = $this->fetchExistingTransactionIds(array_column($records, 'transaction_id'));
 
+        DB::transaction(function () use ($import, $total, $records, &$existingIds, &$success, &$failed) {
             foreach ($records as $idx => $row) {
                 $row = array_map(fn($v) => is_string($v) ? trim($v) : $v, $row);
 
-                $validator = Validator::make($row, [
-                    'transaction_id' => ['required', 'string', 'unique:transactions,transaction_id'],
-                    'account_number'   => ['required', 'regex:/^PL\d{26}$/'],
-                    'transaction_date' => ['required', 'date'],
-                    'amount'           => ['required', 'integer', 'min:1'],
-                    'currency'         => ['required', 'regex:/^[A-Z]{3}$/'],
-                ]);
+                $validated = $this->validateRow($row);
 
-                if ($validator->fails()) {
-                    Log::error('Import row failed', [
-                        'import_id' => $import->id,
-                        'row' => $row,
-                        'error' => implode('; ', $validator->errors()->all()),
-                    ]);
-                    ImportLog::create([
-                        'import_id' => $import->id,
-                        'transaction_id' => $row['transaction_id'] ?? Str::uuid(),
-                        'error_message' => implode('; ', $validator->errors()->all()),
-                    ]);
-                    $failed++;
-                    continue;
-                }
-
-
-                if (in_array($row['transaction_id'], $existingIds)) {
+                if (isset($existingIds[$validated['transaction_id']])) {
                     Log::error('Import row failed', [
                         'import_id' => $import->id,
                         'row' => $row,
@@ -93,7 +59,7 @@ class ImportService
                     ]);
                     ImportLog::create([
                         'import_id' => $import->id,
-                        'transaction_id' => $row['transaction_id'],
+                        'transaction_id' => $validated['transaction_id'],
                         'error_message' => 'Duplicate transaction_id',
                     ]);
                     $failed++;
@@ -101,13 +67,14 @@ class ImportService
                 }
 
                 Transaction::create([
-                    'transaction_id' => $row['transaction_id'],
-                    'account_number' => $row['account_number'],
-                    'transaction_date' => $row['transaction_date'],
-                    'amount' => $row['amount'],
-                    'currency' => $row['currency'],
+                    'transaction_id' => $validated['transaction_id'],
+                    'account_number' => $validated['account_number'],
+                    'transaction_date' => $validated['transaction_date'],
+                    'amount' => $validated['amount'],
+                    'currency' => $validated['currency'],
                 ]);
 
+                $existingIds[$validated['transaction_id']] = true;
                 $success++;
             }
 
@@ -128,5 +95,52 @@ class ImportService
                 'status' => $status,
             ];
         });
+    }
+
+    private function parseRecords(string $ext, string $contents): array
+    {
+        return match ($ext) {
+            'csv' => (new CsvParser())->parse($contents),
+            'json' => (new JsonParser())->parse($contents),
+            'xml' => (new XmlParser())->parse($contents),
+            default => throw new \RuntimeException('Unsupported file type'),
+        };
+    }
+
+    private function fetchExistingTransactionIds(array $transactionIds): array
+    {
+        $ids = [];
+        foreach (array_chunk(array_filter($transactionIds), 500) as $chunk) {
+            Transaction::whereIn('transaction_id', $chunk)
+                ->pluck('transaction_id')
+                ->each(function ($id) use (&$ids) {
+                    $ids[$id] = true;
+                });
+        }
+
+        return $ids;
+    }
+
+    private function validateRow(array $row): array
+    {
+        $validator = Validator::make($row, [
+            'transaction_id'   => ['required', 'string'],
+            'account_number'   => ['required', 'regex:/^PL\d{26}$/'],
+            'transaction_date' => ['required', 'date'],
+            'amount'           => ['required', 'integer', 'min:1'],
+            'currency'         => ['required', 'regex:/^[A-Z]{3}$/'],
+        ]);
+
+        if ($validator->fails()) {
+            ImportLog::create([
+                'import_id' => $row['import_id'] ?? null,
+                'transaction_id' => $row['transaction_id'] ?? Str::uuid(),
+                'error_message' => implode('; ', $validator->errors()->all()),
+            ]);
+
+            throw new \RuntimeException(implode('; ', $validator->errors()->all()));
+        }
+
+        return $validator->validated();
     }
 }

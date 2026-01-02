@@ -3,21 +3,28 @@
 
 namespace App\Services\FileParser;
 
-class XmlParser implements FileParserInterface
+class XmlParser extends AbstractParser
 {
+    protected string $extension = 'xml';
 
-    public function parse($contents): array
+    public function parse(string $contents): array
     {
-        $records = [];
-        $xml = simplexml_load_string($contents, "SimpleXMLElement", LIBXML_NOCDATA);
-        foreach ($xml->transaction ?? [] as $tx) {
-            $records[] = json_decode(json_encode($tx), true);
+        $xml = simplexml_load_string($contents, 'SimpleXMLElement', LIBXML_NOCDATA);
+        if ($xml === false) {
+            throw new \RuntimeException('Nie można odczytać pliku XML.');
         }
-        return $records;
-    }
 
-    public function supports($extension): bool
-    {
-        return strtolower($extension) === 'xml';
+        $records = [];
+        foreach ($xml->transaction ?? [] as $tx) {
+            $records[] = [
+                'transaction_id'   => (string) ($tx->transaction_id ?? ''),
+                'account_number'   => (string) ($tx->account_number ?? ''),
+                'transaction_date' => (string) ($tx->transaction_date ?? ''),
+                'amount'           => (string) ($tx->amount ?? ''),
+                'currency'         => (string) ($tx->currency ?? ''),
+            ];
+        }
+
+        return $records;
     }
 }

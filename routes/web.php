@@ -11,42 +11,24 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
-Route::get('dashboard', function (Request $request) {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('dashboard', function () {
+        return Inertia::render('Dashboard');
+    })->name('dashboard');
 
-Route::get('imports', function (Request $request) {
+    Route::get('imports', function () {
+        return Inertia::render('Imports');
+    })->name('imports');
 
+    Route::get('imports/{id}', function (Request $request) {
+        return Inertia::render('imports/View', [
+            'importId' => $request->route('id'),
+        ]);
+    })->name('imports.view');
 
-    $user = $request->user();
-    $token = $user->currentAccessToken() ?? $user->createToken('imports')->plainTextToken;
-
-    return Inertia::render('Imports', [
-        'token' => $token,
-    ]);
-})->middleware(['auth', 'verified'])->name('imports');
-
-Route::get('imports/{id}', function (Request $request) {
-
-
-    $user = $request->user();
-    $token = $user->currentAccessToken() ?? $user->createToken('imports')->plainTextToken;
-
-    return Inertia::render('imports/View', [
-        'token' => $token,
-        'importId' => $request->route('id'),
-    ]);
-})->middleware(['auth', 'verified'])->name('imports.view');
-
-Route::get('upload', function (Request $request) {
-
-
-    $user = $request->user();
-    $token = $user->currentAccessToken() ?? $user->createToken('imports')->plainTextToken;
-
-    return Inertia::render('Upload', [
-        'token' => $token,
-    ]);
-})->middleware(['auth', 'verified'])->name('upload');
+    Route::get('upload', function () {
+        return Inertia::render('Upload');
+    })->name('upload');
+});
 
 require __DIR__ . '/settings.php';

@@ -5,9 +5,9 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
 import { ref, onMounted, defineProps } from 'vue';
 import { formatDate } from '@/helpers/date'
+import axios from 'axios'
 
 const props = defineProps({
-  token: String,
   importId: String
 });
 
@@ -32,16 +32,9 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 onMounted(async () => {
   try {
-    const response = await fetch(`/api/imports/${props.importId}`, {
-      credentials: 'include',
-      headers: {
-        'Authorization': `Bearer ${props.token}`,
-        'Accept': 'application/json'
-      }
-    })
-    if (!response.ok) throw new Error('Błąd pobierania importów')
-    const result = await response.json()
-    logs.value = result.data?.data || result.data || null;
+      const { data } = await axios.get(`/api/imports/${props.importId}`)
+
+    logs.value = data?.data || null;
 
   } catch (e) {
     error.value = e.message
@@ -82,11 +75,19 @@ onMounted(async () => {
             <th>Date</th>
           </tr>
         </thead>
-        <tbody class="divide-y border-t border-gray-200 dark:border-gray-700">
+        <tbody
+          v-if="logs.logs"
+          class="divide-y border-t border-gray-200 dark:border-gray-700"
+        >
           <tr class="even:bg-gray-200/10" v-for="log in logs.logs" :key="log.id">
             <td>{{ log.transaction_id }}</td>
             <td>{{ log.error_message }}</td>
-            <td>{{ log.created_at }}</td>
+            <td>{{ formatDate(log.created_at, { dateStyle: "medium" }) }}</td>
+          </tr>
+        </tbody>
+        <tbody v-else class="divide-y border-t border-gray-200 dark:border-gray-700">
+          <tr class="even:bg-gray-200/10">
+            <td>Brak wyników</td>
           </tr>
         </tbody>
       </table>

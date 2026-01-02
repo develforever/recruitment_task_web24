@@ -3,7 +3,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { imports } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
-import { defineProps, ref } from 'vue';
+import { ref } from 'vue';
 import { useForm } from '@inertiajs/vue3'
 import axios from 'axios'
 
@@ -13,11 +13,6 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: imports().url,
     },
 ];
-
-const props = defineProps({
-  token: String,
-});
-
 
 
 const form = useForm({
@@ -29,22 +24,27 @@ const result = ref(null);
 
 const submit = async () => {
   try {
+
+    const data = new FormData()
+    data.append('file', form.file)
+
     const response = await axios.post(
-      '/api/imports',
-      form.data(),
-      {
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${props.token}`,
-          'Content-Type': 'multipart/form-data'
+      '/api/imports',data, {
+      headers: { 'Accept': 'application/json' },
+      onUploadProgress: (event) => {
+        if (event.total) {
+          form.progress = { percentage: Math.round((event.loaded * 100) / event.total) }
         }
-      }
+      },
+    }
     )
 
     console.log('API response:', response.data);
     result.value = response.data?.data ?? null;
 
     form.reset()
+
+
   } catch (error) {
     if (error.response?.status === 422) {
       form.setErrors(error.response.data.errors)
@@ -53,6 +53,7 @@ const submit = async () => {
 }
 
 const refresh = async (event) => {
+
   event.preventDefault();
 
   if (!result.value) return;
@@ -63,7 +64,6 @@ const refresh = async (event) => {
       {
         headers: {
           'Accept': 'application/json',
-          'Authorization': `Bearer ${props.token}`,
         }
       }
     )

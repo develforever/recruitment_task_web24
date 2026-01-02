@@ -2,17 +2,12 @@
 
 namespace App\Services\FileParser;
 
-class JsonParser implements FileParserInterface
+class JsonParser extends AbstractParser
 {
+    protected string $extension = 'json';
 
-    public function parse($contents): array
+    public function parse(string $contents): array
     {
-        $records = json_decode($contents, true) ?? [];
-        return $records;
-    }
-
-    public function supports($extension): bool
-    {
-        return strtolower($extension) === 'json';
+        return json_decode($contents, true) ?? [];
     }
 }

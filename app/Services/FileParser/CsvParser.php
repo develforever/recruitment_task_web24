@@ -2,23 +2,31 @@
 
 namespace App\Services\FileParser;
 
-class CsvParser implements FileParserInterface
+class CsvParser extends AbstractParser
 {
+    protected string $extension = 'csv';
 
-    public function parse($contents): array
+    public function parse(string $contents): array
     {
-        $records = [];
-        $rows = array_map('str_getcsv', explode("\n", trim($contents)));
+        $lines = array_filter(array_map('trim', explode("\n", $contents)));
+        if (count($lines) === 0) {
+            return [];
+        }
+
+        $rows = array_map('str_getcsv', $lines);
         $header = array_map('trim', array_shift($rows) ?? []);
+
+        $records = [];
         foreach ($rows as $row) {
-            if (count($row) < 1) continue;
+            if (count($row) === 0) {
+                continue;
+            }
+            if (count($row) !== count($header)) {
+                throw new \RuntimeException('Nieprawidłowa liczba kolumn w wierszu CSV.');
+            }
             $records[] = array_combine($header, $row);
         }
-        return $records;
-    }
 
-    public function supports($extension): bool
-    {
-        return strtolower($extension) === 'csv';
+        return $records;
     }
 }

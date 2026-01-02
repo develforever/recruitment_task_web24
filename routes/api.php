@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\ImportController;
-use App\Http\Controllers\Api\ImportLogController;
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('imports', [ImportController::class, 'store'])->name('api.imports.store'); 

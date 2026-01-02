@@ -12,6 +12,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
+
 </script>
 
 <template>
