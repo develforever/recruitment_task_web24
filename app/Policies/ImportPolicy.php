@@ -21,7 +21,7 @@ class ImportPolicy
      */
     public function view(User $user, Import $import): bool
     {
-        return false;
+        return $import->user_id === $user->id;
     }
 
     /**

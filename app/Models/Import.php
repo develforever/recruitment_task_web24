@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Import extends Model
@@ -21,6 +22,7 @@ class Import extends Model
         'successful_records',
         'failed_records',
         'status',
+        'user_id',
     ];
 
     protected $casts = [
@@ -32,5 +34,10 @@ class Import extends Model
     public function logs(): HasMany
     {
         return $this->hasMany(ImportLog::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }
