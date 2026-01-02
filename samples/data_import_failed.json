@@ -12,5 +12,12 @@
     "transaction_date": "2025-10-13",
     "amount": 20050,
     "currency": "USD"
+  },
+  {
+    "transaction_id": "550e8400-e29b-41d4-a716-446655440002",
+    "account_number": "PL987654321098765432109874",
+    "transaction_date": "2025-10-13",
+    "amount": 0,
+    "currency": "USD"
   }
 ]

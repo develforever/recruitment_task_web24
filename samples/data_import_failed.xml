@@ -13,4 +13,12 @@
     <amount>20050</amount>
     <currency>USD</currency>
   </transaction>
+
+  <transaction>
+    <transaction_id>550e8400-e29b-41d4-a716-446655440002</transaction_id>
+    <account_number>PL987654321098765432109876</account_number>
+    <transaction_date>2025-10-13</transaction_date>
+    <amount>0</amount>
+    <currency>USD</currency>
+  </transaction>
 </transactions>

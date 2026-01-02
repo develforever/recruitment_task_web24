@@ -1,0 +1,24 @@
+<transactions>
+  <transaction>
+    <tr_id>550e8400-e29b-41d4-a716-446655440000</tr_id>
+    <account>PL12345678901234567890123456</account>
+    <tr_date>2025-10-14</tr_date>
+    <amount_value>150000</amount_value>
+    <currency_code>PLN</currency_code>
+  </transaction>
+  <transaction>
+    <tr_id>550e8400-e29b-41d4-a716-446655440001</tr_id>
+    <account>PL98765432109876543210987654</account>
+    <tr_date>2025-10-13</tr_date>
+    <amount_value>20050</amount_value>
+    <currency_code>USD</currency_code>
+  </transaction>
+
+  <transaction>
+    <tr_id>550e8400-e29b-41d4-a716-446655440002</tr_id>
+    <account>PL987654321098765432109876</account>
+    <tr_date>2025-10-13</tr_date>
+    <amount_value>0</amount_value>
+    <currency_code>USD</currency_code>
+  </transaction>
+</transactions>
