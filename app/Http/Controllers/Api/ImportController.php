@@ -88,9 +88,9 @@ class ImportController extends Controller
 
             $validator = Validator::make($row, [
                 'transaction_id'   => ['required', 'string'],
-                'account_number'   => ['required', 'regex:/^PL\d{26}$/'], // simple PL IBAN example
+                'account_number'   => ['required', 'regex:/^PL\d{26}$/'],
                 'transaction_date' => ['required', 'date'],
-                'amount'           => ['required', 'numeric', 'gt:0'],
+                'amount'           => ['required', 'integer', 'min:1'],
                 'currency'         => ['required', 'regex:/^[A-Z]{3}$/'],
             ]);
 
