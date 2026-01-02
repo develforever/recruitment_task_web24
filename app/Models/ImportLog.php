@@ -2,17 +2,18 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ImportLog extends Model
 {
-    public $timestamps = false; // created_at is set manually with DB default or in code
+
+    use HasFactory;
     protected $fillable = [
         'import_id',
         'transaction_id',
         'error_message',
-        'created_at', // or let DB set default timestamp
     ];
 
     public function import(): BelongsTo
