@@ -1,0 +1,131 @@
+﻿System importu transakcji bankowych
+Cel:
+Stworzenie prostego systemu do importu transakcji bankowych w formatach CSV, JSON i XML, wraz z podglądem historii importów i logami błędów.
+________________
+
+
+Zakres zadania
+Backend (Laravel 12)
+* Obsługa uploadu plików CSV, JSON i XML.
+* Walidacja danych dla każdego rekordu:
+   * account_number – niepusty, IBAN,
+   * amount – liczba większa od 0,
+   * currency – trzy litery (np. PLN, USD).
+* Poprawne rekordy zapisujemy w tabeli transactions.
+* Błędne rekordy zapisujemy w tabeli import_logs
+* Informacje o imporcie zapisujemy w tabeli imports
+Frontend (Vue 3)
+* Upload pliku (CSV/JSON/XML).
+* Lista importów pokazująca nazwę pliku, liczbę rekordów i status importu.
+* Podgląd logów błędów dla wybranego importu, pokazujący transaction_id i komunikat błędu.
+________________
+
+
+Struktura danych
+Transactions (rekordy poprawne)
+* id – unikalny identyfikator transakcji,
+* transaction_id – numer transakcji,
+* account_number – numer konta,
+* transaction_date – data transakcji,
+* amount – kwota transakcji,
+* currency – waluta,
+* created_at – data utworzenia,
+
+
+
+Imports (informacje o imporcie)
+   * id – unikalny identyfikator importu,
+   * file_name – nazwa przesłanego pliku,
+   * total_records – liczba wszystkich rekordów w pliku,
+   * successful_records – liczba poprawnie zapisanych rekordów,
+   * failed_records – liczba błędnych rekordów,
+   * status – status importu (success, partial, failed),
+   * created_at – data i czas utworzenia,
+
+
+Import Logs (logi błędów)
+Każdy wpis w logach błędów powinien zawierać:
+   * id – unikalny identyfikator logu
+   * import_id – identyfikator importu, którego dotyczy błąd,
+   * transaction_id – identyfikator rekordu, który spowodował błąd,
+   * error_message – opis błędu, np. brak numeru konta lub nieprawidłowa kwota,
+   * created_at – data i czas utworzenia,
+________________
+
+
+Przykładowe formaty plików
+CSV
+transaction_id,account_number,transaction_date,amount,currency
+550e8400-e29b-41d4-a716-446655440000,PL12345678901234567890123456,2025-10-14,150000,PLN
+550e8400-e29b-41d4-a716-446655440001,PL98765432109876543210987654,2025-10-13,20050,USD
+
+
+
+
+
+
+JSON
+[
+  {
+    "transaction_id": "550e8400-e29b-41d4-a716-446655440000",
+    "account_number": "PL12345678901234567890123456",
+    "transaction_date": "2025-10-14",
+    "amount": 150000,
+    "currency": "PLN"
+  },
+  {
+    "transaction_id": "550e8400-e29b-41d4-a716-446655440001",
+    "account_number": "PL98765432109876543210987654",
+    "transaction_date": "2025-10-13",
+    "amount": 20050,
+    "currency": "USD"
+  }
+]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+XML
+<transactions>
+  <transaction>
+    <transaction_id>550e8400-e29b-41d4-a716-446655440000</transaction_id>
+    <account_number>PL12345678901234567890123456</account_number>
+    <transaction_date>2025-10-14</transaction_date>
+    <amount>150000</amount>
+    <currency>PLN</currency>
+  </transaction>
+  <transaction>
+    <transaction_id>550e8400-e29b-41d4-a716-446655440001</transaction_id>
+    <account_number>PL98765432109876543210987654</account_number>
+    <transaction_date>2025-10-13</transaction_date>
+    <amount>20050</amount>
+    <currency>USD</currency>
+  </transaction>
+</transactions>
+________________
+
+
+Endpointy API
+   * POST /api/imports – upload pliku
+   * GET /api/imports – lista importów
+   * GET /api/imports/{id} – szczegóły importu + logi błędów
+
+
+
+
+Proszę o umieszczenie projektu na github.com i przesłanie linku.
+Powodzenia 🙂
