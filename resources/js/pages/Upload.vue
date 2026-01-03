@@ -41,9 +41,9 @@ const submit = async () => {
 
     console.log('API response:', response.data);
     result.value = response.data?.data ?? null;
-
     form.reset()
 
+    
 
   } catch (error) {
     if (error.response?.status === 422) {
@@ -75,6 +75,8 @@ const refresh = async (event) => {
     console.error('Error fetching import status:', error);
   }
 }
+
+
 </script>
 
 <template>
@@ -118,7 +120,7 @@ const refresh = async (event) => {
               :href="`/imports/${result.id}`"
               >Show log</Link
             >
-            <button type="button" v-else @click="refresh">Refresh to see updates</button>
+            <button type="button" v-else @click="refresh">Click to refresh</button>
           </p>
         </div>
       </form>

@@ -48,8 +48,14 @@ class ImportService
         DB::transaction(function () use ($import, $total, $records, &$existingIds, &$success, &$failed) {
             foreach ($records as $idx => $row) {
                 $row = array_map(fn($v) => is_string($v) ? trim($v) : $v, $row);
+                $row['import_id'] = $import->id;
 
                 $validated = $this->validateRow($row);
+
+                if ($validated === null) {
+                    $failed++;
+                    continue;
+                }
 
                 if (isset($existingIds[$validated['transaction_id']])) {
                     Log::error('Import row failed', [
@@ -76,6 +82,7 @@ class ImportService
 
                 $existingIds[$validated['transaction_id']] = true;
                 $success++;
+                DB::commit();
             }
 
             $status = $failed === 0 ? Import::STATUS_SUCCESS : ($success === 0 ? Import::STATUS_FAILED : Import::STATUS_PARTIAL);
@@ -121,7 +128,7 @@ class ImportService
         return $ids;
     }
 
-    private function validateRow(array $row): array
+    private function validateRow(array $row): array|null
     {
         $validator = Validator::make($row, [
             'transaction_id'   => ['required', 'string'],
@@ -132,13 +139,18 @@ class ImportService
         ]);
 
         if ($validator->fails()) {
+            Log::error('Import row failed', [
+                'import_id' => $row['import_id'] ?? null,
+                'row' => $row,
+                'error' => implode('; ', $validator->errors()->all()),
+            ]);
             ImportLog::create([
                 'import_id' => $row['import_id'] ?? null,
                 'transaction_id' => $row['transaction_id'] ?? Str::uuid(),
                 'error_message' => implode('; ', $validator->errors()->all()),
             ]);
 
-            throw new \RuntimeException(implode('; ', $validator->errors()->all()));
+            return null;
         }
 
         return $validator->validated();
