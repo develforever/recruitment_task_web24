@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\ImportProgressUpdated;
 use App\Models\Import;
 use App\Models\ImportLog;
 use App\Models\Transaction;
@@ -96,6 +97,17 @@ class ImportService
                     'successful_records' => $success,
                     'failed_records' => $failed,
                 ]);
+
+
+                if ($idx % 10 === 0 || $idx === $total - 1) {
+                    ImportProgressUpdated::dispatch(
+                        $import,
+                        $idx + 1,
+                        $total,
+                        Import::STATUS_PROCESSING
+                    );
+                }
+
                 DB::commit();
             }
 
@@ -107,6 +119,13 @@ class ImportService
                 'failed_records' => $failed,
                 'status' => $status,
             ]);
+
+            ImportProgressUpdated::dispatch(
+                $import,
+                $total,
+                $total,
+                $status
+            );
 
             return [
                 'id' => $import->id,

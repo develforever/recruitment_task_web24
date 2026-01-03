@@ -6,21 +6,31 @@ import { Head, Link } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useForm } from '@inertiajs/vue3'
 import axios from 'axios'
+import { useEcho } from "@laravel/echo-vue";
+
 
 const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Imports',
-        href: imports().url,
-    },
+  {
+    title: 'Imports',
+    href: imports().url,
+  },
 ];
 
 
 const form = useForm({
-    name: "Data file import (csv,json,xml)",
-    file: null,
+  name: "Data file import (csv,json,xml)",
+  file: null,
 })
 
-const result = ref(null);
+interface ImportResult {
+  id: number;
+  status: string;
+  successful_records: number;
+  failed_records: number;
+  total_records: number;
+} 
+
+const result = ref<ImportResult | null>(null);
 const uploadProgress = ref(0);
 
 const submit = async () => {
@@ -30,7 +40,7 @@ const submit = async () => {
     data.append('file', form.file)
 
     const response = await axios.post(
-      '/api/imports',data, {
+      '/api/imports', data, {
       headers: { 'Accept': 'application/json' },
       onUploadProgress: (event) => {
         if (event.total) {
@@ -47,7 +57,7 @@ const submit = async () => {
 
     refresh();
 
-  } catch (error) {
+  } catch (error:Error | any) {
     uploadProgress.value = 0;
     if (error.response?.status === 422) {
       form.setErrors(error.response.data.errors)
@@ -59,8 +69,8 @@ const submit = async () => {
   }
 }
 
-const refresh = async (event: Event|null) => {
-  if (event){
+const refresh = async (event?: Event) => {
+  if (event) {
     event.preventDefault();
   }
 
@@ -85,10 +95,36 @@ const refresh = async (event: Event|null) => {
   }
 }
 
+interface ImportProgressEvent {
+  current_record: number;
+  failed_records: number;
+  import_id: number;
+  last_error: string;
+  percentage: number
+  status: string;
+  successful_records: number;
+  total_records: number;
+}
+
+useEcho<ImportProgressEvent>(
+  `import-progress`,
+  ".progress-updated",
+  (e) => {
+    if (!result.value || e.import_id !== result.value.id) {
+      return;
+    }
+    result.value.status = e.status;
+    result.value.successful_records = e.successful_records;
+    result.value.failed_records = e.failed_records;
+    result.value.total_records = e.total_records;
+    uploadProgress.value = e.percentage;
+  },
+);
 
 </script>
 
 <template>
+
   <Head title="Import danych" />
 
   <AppLayout :breadcrumbs="breadcrumbs">
@@ -104,29 +140,17 @@ const refresh = async (event: Event|null) => {
           <!-- Name input -->
           <div class="form-group">
             <label for="import-name">Nazwa importu</label>
-            <input
-              id="import-name"
-              type="text"
-              v-model="form.name"
-              placeholder="np. Import z miesiąca stycznia"
-              class="w-full"
-            />
+            <input id="import-name" type="text" v-model="form.name" placeholder="np. Import z miesiąca stycznia"
+              class="w-full" />
           </div>
 
           <!-- File input -->
           <div class="form-group">
             <label for="import-file">Wybierz plik</label>
-            <input
-              id="import-file"
-              type="file"
-              required
-              accept=".csv,.json,.xml"
-              @input="
-                form.file = $event.target.files[0];
-                form.name = $event.target.files[0].name;
-              "
-              class="w-full cursor-pointer"
-            />
+            <input id="import-file" type="file" required accept=".csv,.json,.xml" @input="
+              form.file = $event.target.files[0];
+            form.name = $event.target.files[0].name;
+            " class="w-full cursor-pointer" />
             <p class="form-hint">Maksymalny rozmiar pliku: 10 MB</p>
           </div>
 
@@ -145,16 +169,14 @@ const refresh = async (event: Event|null) => {
           </div>
 
           <!-- Submit button -->
-          <button
-            type="submit"
-            :disabled="form.processing || !form.file"
-            class="btn-primary w-full md:w-auto"
-          >
+          <button type="submit" :disabled="form.processing || !form.file" class="btn-primary w-full md:w-auto">
             <span v-if="!form.processing">Importuj plik</span>
             <span v-else class="flex items-center gap-2">
               <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <path class="opacity-75" fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                </path>
               </svg>
               Przetwarzanie...
             </span>
@@ -173,7 +195,8 @@ const refresh = async (event: Event|null) => {
               <p class="text-xs text-muted-foreground uppercase tracking-wider mb-1">Status</p>
               <p class="text-lg font-semibold">
                 <span v-if="result.status === 'processing'" class="text-accent">Przetwarzanie...</span>
-                <span v-else-if="result.status === 'completed'" class="text-green-600 dark:text-green-400">Zakończone</span>
+                <span v-else-if="result.status === 'completed'"
+                  class="text-green-600 dark:text-green-400">Zakończone</span>
                 <span v-else-if="result.status === 'failed'" class="text-destructive">Błąd</span>
                 <span v-else class="text-muted-foreground">{{ result.status }}</span>
               </p>
@@ -197,11 +220,7 @@ const refresh = async (event: Event|null) => {
 
           <!-- Action buttons -->
           <div class="flex gap-2 flex-wrap">
-            <Link
-              v-if="result.status !== 'processing'"
-              class="btn-primary"
-              :href="`/imports/${result.id}`"
-            >
+            <Link v-if="result.status !== 'processing'" class="btn-primary" :href="`/imports/${result.id}`">
               Pokaż szczegóły
             </Link>
             <button v-else type="button" @click="refresh" class="btn-secondary">
