@@ -21,6 +21,7 @@ const form = useForm({
 })
 
 const result = ref(null);
+const uploadProgress = ref(0);
 
 const submit = async () => {
   try {
@@ -33,28 +34,35 @@ const submit = async () => {
       headers: { 'Accept': 'application/json' },
       onUploadProgress: (event) => {
         if (event.total) {
-          form.progress = { percentage: Math.round((event.loaded * 100) / event.total) }
+          uploadProgress.value = Math.round((event.loaded * 100) / event.total)
         }
       },
     }
     )
 
-    console.log('API response:', response.data);
     result.value = response.data?.data ?? null;
     form.reset()
+    uploadProgress.value = 0;
+    form.file = null;
 
-    
+    refresh();
 
   } catch (error) {
+    uploadProgress.value = 0;
     if (error.response?.status === 422) {
       form.setErrors(error.response.data.errors)
+    } else if (error.response?.status === 401 || error.response?.status === 419) {
+      window.location.href = '/login'
+    } else {
+      form.setErrors({ file: error.response?.data?.message || 'Błąd podczas przesyłania pliku' })
     }
   }
 }
 
-const refresh = async (event) => {
-
-  event.preventDefault();
+const refresh = async (event: Event|null) => {
+  if (event){
+    event.preventDefault();
+  }
 
   if (!result.value) return;
 
@@ -68,11 +76,12 @@ const refresh = async (event) => {
       }
     )
 
-    console.log('API response:', response.data);
     result.value = response.data?.data ?? null;
 
   } catch (error) {
-    console.error('Error fetching import status:', error);
+    if (error.response?.status === 401 || error.response?.status === 419) {
+      window.location.href = '/login'
+    }
   }
 }
 
@@ -80,50 +89,127 @@ const refresh = async (event) => {
 </script>
 
 <template>
-  <Head title="Dashboard" />
+  <Head title="Import danych" />
 
   <AppLayout :breadcrumbs="breadcrumbs">
-    <div
-      class="relative min-h-[100vh] flex-1 rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border"
-    >
-      <form @submit.prevent="submit">
-        <input type="text" v-model="form.name" />
-        <input
-          type="file"
-          required
-          @input="
-            form.file = $event.target.files[0];
-            form.name = $event.target.files[0].name;
-          "
-        />
-        <progress v-if="form.progress" :value="form.progress.percentage" max="100">
-          {{ form.progress.percentage }}%
-        </progress>
-        <button
-          class="bg-blue-500 hover:bg-blue-700 text-white font-bold inline-block px-4 rounded text-sm"
-          :disabled="form.processing || !form.file"
-        >
-          Importuj
-        </button>
+    <div class="space-y-6">
+      <!-- Upload form card -->
+      <div class="form-wrapper">
+        <div class="mb-6">
+          <h1 class="text-2xl font-bold text-foreground mb-2">Import transakcji bankowych</h1>
+          <p class="text-muted-foreground">Obsługiwane formaty: CSV, JSON, XML</p>
+        </div>
 
-        <div v-if="form.errors.file">{{ form.errors.file }}</div>
+        <form @submit.prevent="submit" class="space-y-5">
+          <!-- Name input -->
+          <div class="form-group">
+            <label for="import-name">Nazwa importu</label>
+            <input
+              id="import-name"
+              type="text"
+              v-model="form.name"
+              placeholder="np. Import z miesiąca stycznia"
+              class="w-full"
+            />
+          </div>
 
-        <div v-if="result">
-          <p>
-            Status: {{ result.status }}<br />
-            Success/failed: {{ result.successful_records }} / {{ result.failed_records
-            }}<br />
-            Total: {{ result.total_records }}<br />
+          <!-- File input -->
+          <div class="form-group">
+            <label for="import-file">Wybierz plik</label>
+            <input
+              id="import-file"
+              type="file"
+              required
+              accept=".csv,.json,.xml"
+              @input="
+                form.file = $event.target.files[0];
+                form.name = $event.target.files[0].name;
+              "
+              class="w-full cursor-pointer"
+            />
+            <p class="form-hint">Maksymalny rozmiar pliku: 10 MB</p>
+          </div>
+
+          <!-- Error display -->
+          <div v-if="form.errors.file" class="form-error bg-destructive/10 border border-destructive/30 p-3 rounded-md">
+            <p class="text-sm">{{ form.errors.file }}</p>
+          </div>
+
+          <!-- Progress bar -->
+          <div v-if="uploadProgress > 0 && uploadProgress < 100" class="space-y-2">
+            <div class="flex justify-between items-center text-sm">
+              <span class="text-muted-foreground">Przesyłanie pliku...</span>
+              <span class="font-semibold text-primary">{{ uploadProgress }}%</span>
+            </div>
+            <progress :value="uploadProgress" max="100" class="w-full"></progress>
+          </div>
+
+          <!-- Submit button -->
+          <button
+            type="submit"
+            :disabled="form.processing || !form.file"
+            class="btn-primary w-full md:w-auto"
+          >
+            <span v-if="!form.processing">Importuj plik</span>
+            <span v-else class="flex items-center gap-2">
+              <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Przetwarzanie...
+            </span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Results card -->
+      <div v-if="result" class="form-wrapper">
+        <div class="mb-4">
+          <h2 class="text-lg font-semibold text-foreground mb-4">Wynik importu</h2>
+
+          <!-- Status indicator -->
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-secondary/50 p-4 rounded-lg">
+              <p class="text-xs text-muted-foreground uppercase tracking-wider mb-1">Status</p>
+              <p class="text-lg font-semibold">
+                <span v-if="result.status === 'processing'" class="text-accent">Przetwarzanie...</span>
+                <span v-else-if="result.status === 'completed'" class="text-green-600 dark:text-green-400">Zakończone</span>
+                <span v-else-if="result.status === 'failed'" class="text-destructive">Błąd</span>
+                <span v-else class="text-muted-foreground">{{ result.status }}</span>
+              </p>
+            </div>
+
+            <div class="bg-green-50 dark:bg-green-950/30 p-4 rounded-lg border border-green-200 dark:border-green-800">
+              <p class="text-xs text-muted-foreground uppercase tracking-wider mb-1">Sukces</p>
+              <p class="text-2xl font-bold text-green-600 dark:text-green-400">{{ result.successful_records }}</p>
+            </div>
+
+            <div class="bg-destructive/10 p-4 rounded-lg border border-destructive/30">
+              <p class="text-xs text-muted-foreground uppercase tracking-wider mb-1">Błędy</p>
+              <p class="text-2xl font-bold text-destructive">{{ result.failed_records }}</p>
+            </div>
+
+            <div class="bg-secondary/50 p-4 rounded-lg">
+              <p class="text-xs text-muted-foreground uppercase tracking-wider mb-1">Razem</p>
+              <p class="text-2xl font-bold">{{ result.total_records }}</p>
+            </div>
+          </div>
+
+          <!-- Action buttons -->
+          <div class="flex gap-2 flex-wrap">
             <Link
               v-if="result.status !== 'processing'"
-              class="bg-blue-500 hover:bg-blue-700 text-white font-bold inline-block px-4 rounded text-sm"
+              class="btn-primary"
               :href="`/imports/${result.id}`"
-              >Show log</Link
             >
-            <button type="button" v-else @click="refresh">Click to refresh</button>
-          </p>
+              Pokaż szczegóły
+            </Link>
+            <button v-else type="button" @click="refresh" class="btn-secondary">
+              Odśwież status
+            </button>
+          </div>
         </div>
-      </form>
+      </div>
     </div>
   </AppLayout>
 </template>

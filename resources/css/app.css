@@ -169,4 +169,114 @@
     body {
         @apply bg-background text-foreground;
     }
+
+    /* Form inputs */
+    input[type='text'],
+    input[type='email'],
+    input[type='password'],
+    input[type='number'],
+    input[type='date'],
+    input[type='file'],
+    select,
+    textarea {
+        @apply w-full px-3 py-2.5 rounded-md border border-input bg-background text-foreground placeholder-muted-foreground;
+        @apply transition-colors duration-200;
+        @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+        @apply disabled:opacity-50 disabled:cursor-not-allowed;
+    }
+
+    input[type='file'] {
+        @apply file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 file:cursor-pointer file:transition-colors;
+    }
+
+    .dark input[type='file'] {
+        @apply focus:ring-offset-0;
+    }
+
+    /* Form labels */
+    label {
+        @apply block text-sm font-medium text-foreground mb-2;
+    }
+
+    /* Progress bar */
+    progress {
+        @apply w-full h-2 rounded-full overflow-hidden bg-secondary;
+        appearance: none;
+    }
+
+    progress::-webkit-progress-bar {
+        @apply bg-secondary rounded-full;
+    }
+
+    progress::-webkit-progress-value {
+        @apply bg-gradient-to-r from-primary to-accent rounded-full transition-all;
+    }
+
+    progress::-moz-progress-bar {
+        @apply bg-gradient-to-r from-primary to-accent rounded-full;
+    }
+}
+
+@layer components {
+    /* Primary button */
+    .btn-primary {
+        @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-md;
+        @apply bg-primary text-primary-foreground font-medium text-sm;
+        @apply hover:bg-primary/90 transition-colors duration-200;
+        @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+        @apply disabled:opacity-50 disabled:cursor-not-allowed;
+        @apply active:scale-95 transition-transform;
+    }
+
+    .dark .btn-primary {
+        @apply focus:ring-offset-0;
+    }
+
+    /* Secondary button */
+    .btn-secondary {
+        @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-md;
+        @apply bg-secondary text-secondary-foreground font-medium text-sm;
+        @apply hover:bg-secondary/80 transition-colors duration-200;
+        @apply focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2;
+        @apply disabled:opacity-50 disabled:cursor-not-allowed;
+        @apply active:scale-95 transition-transform;
+    }
+
+    .dark .btn-secondary {
+        @apply focus:ring-offset-0;
+    }
+
+    /* Danger button */
+    .btn-danger {
+        @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-md;
+        @apply bg-destructive text-destructive-foreground font-medium text-sm;
+        @apply hover:bg-destructive/90 transition-colors duration-200;
+        @apply focus:outline-none focus:ring-2 focus:ring-destructive focus:ring-offset-2;
+        @apply disabled:opacity-50 disabled:cursor-not-allowed;
+        @apply active:scale-95 transition-transform;
+    }
+
+    .dark .btn-danger {
+        @apply focus:ring-offset-0;
+    }
+
+    /* Form group */
+    .form-group {
+        @apply mb-4;
+    }
+
+    /* Form error */
+    .form-error {
+        @apply mt-1.5 text-sm text-destructive font-medium;
+    }
+
+    /* Form hint */
+    .form-hint {
+        @apply mt-1 text-xs text-muted-foreground;
+    }
+
+    /* Form wrapper */
+    .form-wrapper {
+        @apply space-y-6 p-6 rounded-lg border border-border bg-card;
+    }
 }

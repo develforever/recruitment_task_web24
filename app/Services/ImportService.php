@@ -50,9 +50,14 @@ class ImportService
                 $row = array_map(fn($v) => is_string($v) ? trim($v) : $v, $row);
                 $row['import_id'] = $import->id;
 
-                $validated = $this->validateRow($row);
-
-                if ($validated === null) {
+                try {
+                    $validated = $this->validateRow($row);
+                } catch (\Throwable $e) {
+                    ImportLog::create([
+                        'import_id' => $import->id,
+                        'transaction_id' => $row['transaction_id'] ?? Str::uuid(),
+                        'error_message' => $e->getMessage(),
+                    ]);
                     $failed++;
                     continue;
                 }
@@ -102,6 +107,9 @@ class ImportService
                 'status' => $status,
             ];
         });
+
+        // Usuń plik po przetworzeniu
+        Storage::delete($filePath);
     }
 
     private function parseRecords(string $ext, string $contents): array
@@ -128,10 +136,10 @@ class ImportService
         return $ids;
     }
 
-    private function validateRow(array $row): array|null
+    private function validateRow(array $row): array
     {
         $validator = Validator::make($row, [
-            'transaction_id'   => ['required', 'string'],
+            'transaction_id'   => ['required', 'string', 'min:1', 'max:255'],
             'account_number'   => ['required', 'regex:/^PL\d{26}$/'],
             'transaction_date' => ['required', 'date'],
             'amount'           => ['required', 'integer', 'min:1'],
@@ -150,7 +158,7 @@ class ImportService
                 'error_message' => implode('; ', $validator->errors()->all()),
             ]);
 
-            return null;
+            throw new \RuntimeException('Validation failed: ' . implode('; ', $validator->errors()->all()));
         }
 
         return $validator->validated();

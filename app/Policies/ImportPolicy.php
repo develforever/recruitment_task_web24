@@ -25,6 +25,14 @@ class ImportPolicy
     }
 
     /**
+     * Determine whether the user can view the model logs.
+     */
+    public function viewLogs(User $user, Import $import): bool
+    {
+        return $import->user_id === $user->id;
+    }
+
+    /**
      * Determine whether the user can create models.
      */
     public function create(User $user): bool

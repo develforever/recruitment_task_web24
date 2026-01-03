@@ -15,26 +15,40 @@ class ImportController extends Controller
     {
         $this->authorize('viewAny', Import::class);
 
-        $perPage = (int) request()->query('per_page', 15);
+        $perPage = (int) request()->query('per_page', 10);
         $perPage = min($perPage, 100);
 
         $imports = Import::with('user:id,name,email')
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);
 
-        return response()->json($imports);
+        return response()->json([
+            'data' => $imports,
+        ]);
     }
 
     public function show(Import $import)
     {
         $this->authorize('view', $import);
 
-        $import->load(['logs' => function ($q) {
-            $q->orderBy('created_at', 'desc')->limit(50);
-        }]);
-
         return response()->json([
             'data' => $import,
+        ]);
+    }
+
+    public function showLogs(Import $import)
+    {
+        $this->authorize('viewLogs', $import);
+
+        $perPage = (int) request()->query('per_page', 50);
+        $perPage = min($perPage, 100);
+
+        $logs = $import->logs()
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
+
+        return response()->json([
+            'data' => $logs,
         ]);
     }
 
