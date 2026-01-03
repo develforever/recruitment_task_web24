@@ -46,6 +46,11 @@ class ImportService
         $existingIds = $this->fetchExistingTransactionIds(array_column($records, 'transaction_id'));
 
         DB::transaction(function () use ($import, $total, $records, &$existingIds, &$success, &$failed) {
+
+            $import->update([
+                'total_records' => $total,
+            ]);
+
             foreach ($records as $idx => $row) {
                 $row = array_map(fn($v) => is_string($v) ? trim($v) : $v, $row);
                 $row['import_id'] = $import->id;
@@ -87,6 +92,10 @@ class ImportService
 
                 $existingIds[$validated['transaction_id']] = true;
                 $success++;
+                $import->update([
+                    'successful_records' => $success,
+                    'failed_records' => $failed,
+                ]);
                 DB::commit();
             }
 
