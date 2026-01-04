@@ -10,6 +10,9 @@ use Illuminate\Http\Request;
 
 class ImportController extends Controller
 {
+    /**
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function index(Request $request)
     {
         $this->authorize('viewAny', Import::class);
@@ -26,6 +29,9 @@ class ImportController extends Controller
         ]);
     }
 
+    /**
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function show(Import $import)
     {
         $this->authorize('view', $import);
@@ -35,6 +41,9 @@ class ImportController extends Controller
         ]);
     }
 
+    /**
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function showLogs(Import $import)
     {
         $this->authorize('viewLogs', $import);
@@ -51,6 +60,9 @@ class ImportController extends Controller
         ]);
     }
 
+    /**
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function store(StoreImportRequest $request)
     {
         $file = $request->file('file');

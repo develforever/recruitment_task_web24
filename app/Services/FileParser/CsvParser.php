@@ -6,6 +6,9 @@ class CsvParser extends AbstractParser
 {
     protected string $extension = 'csv';
 
+    /**
+     * @return array<int, array<string, string>>
+     */
     public function parse(string $contents): array
     {
         $lines = array_filter(array_map('trim', explode("\n", $contents)));
@@ -14,13 +17,10 @@ class CsvParser extends AbstractParser
         }
 
         $rows = array_map('str_getcsv', $lines);
-        $header = array_map('trim', array_shift($rows) ?? []);
+        $header = array_map('trim', array_shift($rows));
 
         $records = [];
         foreach ($rows as $row) {
-            if (count($row) === 0) {
-                continue;
-            }
             if (count($row) !== count($header)) {
                 throw new \RuntimeException('Nieprawidłowa liczba kolumn w wierszu CSV.');
             }

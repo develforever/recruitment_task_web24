@@ -22,6 +22,9 @@ class ImportProgressUpdated implements ShouldBroadcast
         public ?string $lastError = null,
     ) {}
 
+    /**
+     * @return array<int, Channel>
+     */
     public function broadcastOn(): array
     {
         return [
@@ -35,6 +38,9 @@ class ImportProgressUpdated implements ShouldBroadcast
         return 'progress-updated';
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function broadcastWith(): array
     {
         return [

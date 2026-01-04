@@ -6,6 +6,9 @@ class XmlParser extends AbstractParser
 {
     protected string $extension = 'xml';
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     public function parse(string $contents): array
     {
         libxml_use_internal_errors(true);

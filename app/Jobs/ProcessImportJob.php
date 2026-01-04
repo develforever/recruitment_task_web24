@@ -16,11 +16,11 @@ class ProcessImportJob implements ShouldQueue
 {
     use InteractsWithQueue, Queueable, SerializesModels;
 
-    public $tries = 3;
+    public int $tries = 3;
 
-    public $timeout = 300;
+    public int $timeout = 300;
 
-    public $maxExceptions = 3;
+    public int $maxExceptions = 3;
 
     /**
      * Create a new job instance.

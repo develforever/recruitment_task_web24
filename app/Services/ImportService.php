@@ -14,10 +14,12 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
 
 class ImportService
 {
+    /**
+     * @throws \RuntimeException
+     */
     public function processImport(Import $import, string $filePath, User $user): void
     {
 
@@ -59,13 +61,13 @@ class ImportService
                 } catch (\Throwable $e) {
 
                     Log::error('Import row failed', [
-                        'import_id' => $row['import_id'] ?? null,
+                        'import_id' => $row['import_id'],
                         'row' => $row,
                         'error' => $e->getMessage(),
                     ]);
                     ImportLog::create([
-                        'import_id' => $row['import_id'] ?? null,
-                        'transaction_id' => $row['transaction_id'] ?? Str::uuid(),
+                        'import_id' => $row['import_id'],
+                        'transaction_id' => $row['transaction_id'],
                         'error_message' => $e->getMessage(),
                     ]);
                     $failed++;
@@ -131,20 +133,16 @@ class ImportService
                 $total,
                 $status
             );
-
-            return [
-                'id' => $import->id,
-                'total' => $total,
-                'successful' => $success,
-                'failed' => $failed,
-                'status' => $status,
-            ];
         });
 
-        // Usuń plik po przetworzeniu
         Storage::delete($filePath);
     }
 
+    /**
+     * @return array<int, array<string, mixed>>
+     *
+     * @throws \RuntimeException
+     */
     public function parseRecords(string $ext, string $contents): array
     {
         return match ($ext) {
@@ -155,6 +153,10 @@ class ImportService
         };
     }
 
+    /**
+     * @param  array<int, string>  $transactionIds
+     * @return array<string, bool>
+     */
     private function fetchExistingTransactionIds(array $transactionIds): array
     {
         $ids = [];
@@ -169,6 +171,10 @@ class ImportService
         return $ids;
     }
 
+    /**
+     * @param  array<string, mixed>  $row
+     * @return array<string, mixed>
+     */
     public function validateRow(array $row): array
     {
         $validator = Validator::make($row, [

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\ImportFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,6 +10,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Import extends Model
 {
+    /**
+     * @use HasFactory<ImportFactory>
+     */
     use HasFactory;
 
     const STATUS_SUCCESS = 'success';
@@ -34,11 +38,17 @@ class Import extends Model
         'failed_records' => 'integer',
     ];
 
+    /**
+     * @return HasMany<ImportLog, $this>
+     */
     public function logs(): HasMany
     {
         return $this->hasMany(ImportLog::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

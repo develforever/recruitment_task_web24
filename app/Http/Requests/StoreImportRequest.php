@@ -12,6 +12,9 @@ class StoreImportRequest extends FormRequest
         return $this->user()->can('create', \App\Models\Import::class);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [
@@ -32,6 +35,9 @@ class StoreImportRequest extends FormRequest
         ];
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function messages(): array
     {
         return [
