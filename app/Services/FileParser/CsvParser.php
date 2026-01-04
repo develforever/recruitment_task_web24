@@ -24,7 +24,7 @@ class CsvParser extends AbstractParser
             if (count($row) !== count($header)) {
                 throw new \RuntimeException('Nieprawidłowa liczba kolumn w wierszu CSV.');
             }
-            $records[] = array_combine($header, $row);
+            $records[] = array_combine($header, array_map('trim', $row));
         }
 
         return $records;
