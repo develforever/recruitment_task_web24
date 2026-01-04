@@ -8,9 +8,11 @@ class XmlParser extends AbstractParser
 
     public function parse(string $contents): array
     {
+        libxml_use_internal_errors(true);
         $xml = simplexml_load_string($contents, 'SimpleXMLElement', LIBXML_NOCDATA);
         if ($xml === false) {
-            throw new \RuntimeException('Nie można odczytać pliku XML.');
+            libxml_clear_errors();
+            return [];
         }
 
         $records = [];
@@ -23,6 +25,8 @@ class XmlParser extends AbstractParser
                 'currency' => (string) ($tx->currency ?? ''),
             ];
         }
+
+        libxml_clear_errors();
 
         return $records;
     }
