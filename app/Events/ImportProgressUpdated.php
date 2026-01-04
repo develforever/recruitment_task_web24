@@ -41,7 +41,7 @@ class ImportProgressUpdated implements ShouldBroadcast
             'import_id' => $this->import->id,
             'current_record' => $this->currentRecord,
             'total_records' => $this->totalRecords,
-            'percentage' => round(($this->currentRecord / $this->totalRecords) * 100),
+            'percentage' => $this->currentRecord ? round(($this->currentRecord / $this->totalRecords) * 100) : 0,
             'status' => $this->status,
             'last_error' => $this->lastError,
             'successful_records' => $this->import->successful_records,
