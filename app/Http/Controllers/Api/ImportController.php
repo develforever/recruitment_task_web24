@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreImportRequest;
 use App\Jobs\ProcessImportJob;
 use App\Models\Import;
-use App\Models\User;
 use Illuminate\Http\Request;
 
 class ImportController extends Controller

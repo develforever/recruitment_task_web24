@@ -14,10 +14,12 @@ use Throwable;
 
 class ProcessImportJob implements ShouldQueue
 {
-    use Queueable, InteractsWithQueue, SerializesModels;
+    use InteractsWithQueue, Queueable, SerializesModels;
 
     public $tries = 3;
+
     public $timeout = 300;
+
     public $maxExceptions = 3;
 
     /**
@@ -64,7 +66,6 @@ class ProcessImportJob implements ShouldQueue
             'status' => Import::STATUS_FAILED,
         ]);
 
-
-        //$this->user->notify(new ImportFailedNotification($this->import));
+        // $this->user->notify(new ImportFailedNotification($this->import));
     }
 }

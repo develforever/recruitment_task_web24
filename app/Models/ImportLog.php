@@ -8,8 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ImportLog extends Model
 {
-
     use HasFactory;
+
     protected $fillable = [
         'import_id',
         'transaction_id',

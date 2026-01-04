@@ -12,8 +12,11 @@ class Import extends Model
     use HasFactory;
 
     const STATUS_SUCCESS = 'success';
+
     const STATUS_PARTIAL = 'partial';
+
     const STATUS_FAILED = 'failed';
+
     const STATUS_PROCESSING = 'processing';
 
     protected $fillable = [

@@ -18,15 +18,12 @@ use Illuminate\Support\Str;
 
 class ImportService
 {
-
     public function processImport(Import $import, string $filePath, User $user): void
     {
-
 
         $fileName = $import->file_name;
         $contents = Storage::get($filePath);
         $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-
 
         try {
             $records = $this->parseRecords($ext, $contents);
@@ -37,7 +34,7 @@ class ImportService
                 'trace' => $e->getTraceAsString(),
             ]);
             $import->update(['status' => Import::STATUS_FAILED]);
-            throw new \RuntimeException('Failed to parse file: ' . $e->getMessage(), previous: $e);
+            throw new \RuntimeException('Failed to parse file: '.$e->getMessage(), previous: $e);
         }
 
         $total = count($records);
@@ -53,7 +50,7 @@ class ImportService
             ]);
 
             foreach ($records as $idx => $row) {
-                $row = array_map(fn($v) => is_string($v) ? trim($v) : $v, $row);
+                $row = array_map(fn ($v) => is_string($v) ? trim($v) : $v, $row);
                 $row['import_id'] = $import->id;
 
                 try {
@@ -65,6 +62,7 @@ class ImportService
                         'error_message' => $e->getMessage(),
                     ]);
                     $failed++;
+
                     continue;
                 }
 
@@ -80,6 +78,7 @@ class ImportService
                         'error_message' => 'Duplicate transaction_id',
                     ]);
                     $failed++;
+
                     continue;
                 }
 
@@ -97,7 +96,6 @@ class ImportService
                     'successful_records' => $success,
                     'failed_records' => $failed,
                 ]);
-
 
                 if ($idx % 10 === 0 || $idx === $total - 1) {
                     ImportProgressUpdated::dispatch(
@@ -143,9 +141,9 @@ class ImportService
     private function parseRecords(string $ext, string $contents): array
     {
         return match ($ext) {
-            'csv' => (new CsvParser())->parse($contents),
-            'json' => (new JsonParser())->parse($contents),
-            'xml' => (new XmlParser())->parse($contents),
+            'csv' => (new CsvParser)->parse($contents),
+            'json' => (new JsonParser)->parse($contents),
+            'xml' => (new XmlParser)->parse($contents),
             default => throw new \RuntimeException('Unsupported file type'),
         };
     }
@@ -167,11 +165,11 @@ class ImportService
     private function validateRow(array $row): array
     {
         $validator = Validator::make($row, [
-            'transaction_id'   => ['required', 'string', 'min:1', 'max:255'],
-            'account_number'   => ['required', 'regex:/^PL\d{26}$/'],
+            'transaction_id' => ['required', 'string', 'min:1', 'max:255'],
+            'account_number' => ['required', 'regex:/^PL\d{26}$/'],
             'transaction_date' => ['required', 'date'],
-            'amount'           => ['required', 'integer', 'min:1'],
-            'currency'         => ['required', 'regex:/^[A-Z]{3}$/'],
+            'amount' => ['required', 'integer', 'min:1'],
+            'currency' => ['required', 'regex:/^[A-Z]{3}$/'],
         ]);
 
         if ($validator->fails()) {
@@ -186,7 +184,7 @@ class ImportService
                 'error_message' => implode('; ', $validator->errors()->all()),
             ]);
 
-            throw new \RuntimeException('Validation failed: ' . implode('; ', $validator->errors()->all()));
+            throw new \RuntimeException('Validation failed: '.implode('; ', $validator->errors()->all()));
         }
 
         return $validator->validated();

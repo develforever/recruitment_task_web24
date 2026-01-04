@@ -1,20 +1,20 @@
 import '../css/app.css';
 
 import { createInertiaApp } from '@inertiajs/vue3';
+import { configureEcho } from '@laravel/echo-vue';
+import axios from 'axios';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import type { DefineComponent } from 'vue';
 import { createApp, h } from 'vue';
 import { initializeTheme } from './composables/useAppearance';
-import axios from 'axios';
-import { configureEcho } from '@laravel/echo-vue';
 
 configureEcho({
     broadcaster: 'reverb',
 });
 
-await axios.get('/sanctum/csrf-cookie')
-axios.defaults.withCredentials = true
-axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest'
+await axios.get('/sanctum/csrf-cookie');
+axios.defaults.withCredentials = true;
+axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 

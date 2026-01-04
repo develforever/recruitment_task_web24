@@ -4,13 +4,12 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 
 class ImportsTest extends TestCase
 {
     use RefreshDatabase;
-    
+
     public function test_redirect_to_login(): void
     {
         $response = $this->get(route('imports'));

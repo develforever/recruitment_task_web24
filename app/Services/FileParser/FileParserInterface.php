@@ -2,7 +2,9 @@
 
 namespace App\Services\FileParser;
 
-interface FileParserInterface {
+interface FileParserInterface
+{
     public function parse(string $contents): array;
-    public function supports(string $extension): bool;   
+
+    public function supports(string $extension): bool;
 }

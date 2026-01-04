@@ -179,14 +179,14 @@
     input[type='file'],
     select,
     textarea {
-        @apply w-full px-3 py-2.5 rounded-md border border-input bg-background text-foreground placeholder-muted-foreground;
+        @apply w-full rounded-md border border-input bg-background px-3 py-2.5 text-foreground placeholder-muted-foreground;
         @apply transition-colors duration-200;
-        @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
-        @apply disabled:opacity-50 disabled:cursor-not-allowed;
+        @apply focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none;
+        @apply disabled:cursor-not-allowed disabled:opacity-50;
     }
 
     input[type='file'] {
-        @apply file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 file:cursor-pointer file:transition-colors;
+        @apply file:mr-4 file:cursor-pointer file:rounded-md file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-semibold file:text-primary-foreground file:transition-colors hover:file:bg-primary/90;
     }
 
     .dark input[type='file'] {
@@ -195,37 +195,37 @@
 
     /* Form labels */
     label {
-        @apply block text-sm font-medium text-foreground mb-2;
+        @apply mb-2 block text-sm font-medium text-foreground;
     }
 
     /* Progress bar */
     progress {
-        @apply w-full h-2 rounded-full overflow-hidden bg-secondary;
+        @apply h-2 w-full overflow-hidden rounded-full bg-secondary;
         appearance: none;
     }
 
     progress::-webkit-progress-bar {
-        @apply bg-secondary rounded-full;
+        @apply rounded-full bg-secondary;
     }
 
     progress::-webkit-progress-value {
-        @apply bg-gradient-to-r from-primary to-accent rounded-full transition-all;
+        @apply rounded-full bg-gradient-to-r from-primary to-accent transition-all;
     }
 
     progress::-moz-progress-bar {
-        @apply bg-gradient-to-r from-primary to-accent rounded-full;
+        @apply rounded-full bg-gradient-to-r from-primary to-accent;
     }
 }
 
 @layer components {
     /* Primary button */
     .btn-primary {
-        @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-md;
-        @apply bg-primary text-primary-foreground font-medium text-sm;
-        @apply hover:bg-primary/90 transition-colors duration-200;
-        @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
-        @apply disabled:opacity-50 disabled:cursor-not-allowed;
-        @apply active:scale-95 transition-transform;
+        @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2.5;
+        @apply bg-primary text-sm font-medium text-primary-foreground;
+        @apply transition-colors duration-200 hover:bg-primary/90;
+        @apply focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none;
+        @apply disabled:cursor-not-allowed disabled:opacity-50;
+        @apply transition-transform active:scale-95;
     }
 
     .dark .btn-primary {
@@ -234,12 +234,12 @@
 
     /* Secondary button */
     .btn-secondary {
-        @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-md;
-        @apply bg-secondary text-secondary-foreground font-medium text-sm;
-        @apply hover:bg-secondary/80 transition-colors duration-200;
-        @apply focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2;
-        @apply disabled:opacity-50 disabled:cursor-not-allowed;
-        @apply active:scale-95 transition-transform;
+        @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2.5;
+        @apply bg-secondary text-sm font-medium text-secondary-foreground;
+        @apply transition-colors duration-200 hover:bg-secondary/80;
+        @apply focus:ring-2 focus:ring-secondary focus:ring-offset-2 focus:outline-none;
+        @apply disabled:cursor-not-allowed disabled:opacity-50;
+        @apply transition-transform active:scale-95;
     }
 
     .dark .btn-secondary {
@@ -248,12 +248,12 @@
 
     /* Danger button */
     .btn-danger {
-        @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-md;
-        @apply bg-destructive text-destructive-foreground font-medium text-sm;
-        @apply hover:bg-destructive/90 transition-colors duration-200;
-        @apply focus:outline-none focus:ring-2 focus:ring-destructive focus:ring-offset-2;
-        @apply disabled:opacity-50 disabled:cursor-not-allowed;
-        @apply active:scale-95 transition-transform;
+        @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2.5;
+        @apply bg-destructive text-sm font-medium text-destructive-foreground;
+        @apply transition-colors duration-200 hover:bg-destructive/90;
+        @apply focus:ring-2 focus:ring-destructive focus:ring-offset-2 focus:outline-none;
+        @apply disabled:cursor-not-allowed disabled:opacity-50;
+        @apply transition-transform active:scale-95;
     }
 
     .dark .btn-danger {
@@ -267,7 +267,7 @@
 
     /* Form error */
     .form-error {
-        @apply mt-1.5 text-sm text-destructive font-medium;
+        @apply mt-1.5 text-sm font-medium text-destructive;
     }
 
     /* Form hint */
@@ -277,6 +277,6 @@
 
     /* Form wrapper */
     .form-wrapper {
-        @apply space-y-6 p-6 rounded-lg border border-border bg-card;
+        @apply space-y-6 rounded-lg border border-border bg-card p-6;
     }
 }

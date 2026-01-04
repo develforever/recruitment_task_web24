@@ -25,7 +25,7 @@ class ImportProgressUpdated implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new Channel('import.' . $this->import->id),
+            new Channel('import.'.$this->import->id),
             new PrivateChannel('import-progress'),
         ];
     }

@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Services\FileParser;
 
 class XmlParser extends AbstractParser
@@ -17,11 +16,11 @@ class XmlParser extends AbstractParser
         $records = [];
         foreach ($xml->transaction ?? [] as $tx) {
             $records[] = [
-                'transaction_id'   => (string) ($tx->transaction_id ?? ''),
-                'account_number'   => (string) ($tx->account_number ?? ''),
+                'transaction_id' => (string) ($tx->transaction_id ?? ''),
+                'account_number' => (string) ($tx->account_number ?? ''),
                 'transaction_date' => (string) ($tx->transaction_date ?? ''),
-                'amount'           => (string) ($tx->amount ?? ''),
-                'currency'         => (string) ($tx->currency ?? ''),
+                'amount' => (string) ($tx->amount ?? ''),
+                'currency' => (string) ($tx->currency ?? ''),
             ];
         }
 

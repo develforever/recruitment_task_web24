@@ -2,16 +2,15 @@
 
 namespace Tests\Feature\Http\Controller\Api;
 
-use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
-use Tests\TestCase;
-use Illuminate\Support\Facades\Bus;
 use App\Jobs\ProcessImportJob;
 use App\Models\Import;
+use App\Models\User;
 use App\Services\ImportService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Storage;
+use Tests\TestCase;
 
 class ImportTest extends TestCase
 {
@@ -42,8 +41,8 @@ class ImportTest extends TestCase
                     '*' => [
                         'url',
                         'label',
-                        'active'
-                    ]
+                        'active',
+                    ],
                 ],
                 'next_page_url',
                 'path',
@@ -57,9 +56,9 @@ class ImportTest extends TestCase
                         'status',
                         'created_at',
                         'updated_at',
-                    ]
-                ]
-            ]
+                    ],
+                ],
+            ],
         ]);
     }
 
@@ -81,7 +80,7 @@ class ImportTest extends TestCase
 
         $file = UploadedFile::fake()->createWithContent(
             'test.csv',
-            <<<CSV
+            <<<'CSV'
 transaction_id,account_number,transaction_date,amount,currency
 550e8400-e29b-41d4-a716-446655440000,PL12345678901234567890123456,2025-10-14,150000,PLN
 550e8400-e29b-41d4-a716-446655440001,P98765432109876543210987654,2025-10-13,20050,USD
@@ -109,7 +108,7 @@ CSV
                 'status',
                 'created_at',
                 'updated_at',
-            ]
+            ],
         ]);
         $this->assertTrue(Storage::disk('local')->exists('imports'));
 
@@ -134,7 +133,7 @@ CSV
 
         $file = UploadedFile::fake()->createWithContent(
             'test.xml',
-            <<<XML
+            <<<'XML'
 <transactions>
   <transaction>
     <transaction_id>550e8400-e29b-41d4-a716-446655440000</transaction_id>
@@ -174,7 +173,7 @@ XML
                 'status',
                 'created_at',
                 'updated_at',
-            ]
+            ],
         ]);
         $this->assertTrue(Storage::disk('local')->exists('imports'));
 
@@ -182,7 +181,6 @@ XML
             $this->assertTrue($job->user->is($user));
             $this->assertNotNull($job->import->id);
             $job->handle(app(ImportService::class));
-
 
             $this->assertEquals(2, Import::find($job->import->id)->total_records);
             $this->assertEquals(1, Import::find($job->import->id)->successful_records);
@@ -200,7 +198,7 @@ XML
 
         $file = UploadedFile::fake()->createWithContent(
             'test.json',
-            <<<JSON
+            <<<'JSON'
             [
   {
     "transaction_id": "550e8400-e29b-41d4-a716-446655440000",
@@ -240,7 +238,7 @@ JSON
                 'status',
                 'created_at',
                 'updated_at',
-            ]
+            ],
         ]);
         $this->assertTrue(Storage::disk('local')->exists('imports'));
 
@@ -248,7 +246,6 @@ JSON
             $this->assertTrue($job->user->is($user));
             $this->assertNotNull($job->import->id);
             $job->handle(app(ImportService::class));
-
 
             $this->assertEquals(2, Import::find($job->import->id)->total_records);
             $this->assertEquals(0, Import::find($job->import->id)->successful_records);
@@ -266,7 +263,7 @@ JSON
 
         $file = UploadedFile::fake()->createWithContent(
             'test.txt',
-            <<<TXT
+            <<<'TXT'
 TEST    
 TXT
         );
@@ -283,8 +280,8 @@ TXT
         $response->assertJsonStructure([
             'message',
             'errors' => [
-                'file'
-            ]
+                'file',
+            ],
         ]);
 
         Bus::assertNotDispatched(ProcessImportJob::class);

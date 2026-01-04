@@ -22,11 +22,12 @@ class StoreImportRequest extends FormRequest
                 function ($attr, $file, $fail) {
                     $ext = strtolower($file->getClientOriginalExtension());
 
-                    if (!in_array($ext, ['csv', 'json', 'xml'])) {
+                    if (! in_array($ext, ['csv', 'json', 'xml'])) {
                         $fail('Nieobsługiwany format pliku.');
+
                         return;
                     }
-                }
+                },
             ],
         ];
     }
@@ -47,12 +48,11 @@ class StoreImportRequest extends FormRequest
                 $file = $this->file('file');
                 $ext = strtolower($file->getClientOriginalExtension());
 
-
                 if ($ext === 'xml') {
                     libxml_use_internal_errors(true);
                     $content = @file_get_contents($file->getRealPath());
 
-                    if ($content === false || !@simplexml_load_string($content)) {
+                    if ($content === false || ! @simplexml_load_string($content)) {
                         $validator->errors()->add('file', 'Plik XML jest uszkodzony lub nieprawidłowy.');
                     }
 
@@ -65,7 +65,7 @@ class StoreImportRequest extends FormRequest
                     json_decode($content);
 
                     if (json_last_error() !== JSON_ERROR_NONE) {
-                        $validator->errors()->add('file', 'Plik JSON jest nieprawidłowy: ' . json_last_error_msg());
+                        $validator->errors()->add('file', 'Plik JSON jest nieprawidłowy: '.json_last_error_msg());
                     }
                 }
             }
