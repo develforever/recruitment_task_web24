@@ -103,4 +103,4 @@ Wykonaj polecenia:
 compose run setup
 ```
 
-Zarejestruj nowe pod adresem `http://localhost:8000/register` i zaloguj się do panelu aplikacji.
+Zarejestruj nowe konto pod adresem `http://localhost:8000/register` i zaloguj się do panelu aplikacji.
