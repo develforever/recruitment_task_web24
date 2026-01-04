@@ -2,7 +2,6 @@
 
 namespace Tests\Unit\Services\FileParser;
 
-
 use App\Services\FileParser\JsonParser;
 use PHPUnit\Framework\TestCase;
 
@@ -13,13 +12,12 @@ class JsonParserTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->parser = new JsonParser();
+        $this->parser = new JsonParser;
     }
-
 
     public function test_parse_valid_json_data(): void
     {
-        $jsonData = <<<JSON
+        $jsonData = <<<'JSON'
 [
     {
         "transaction_id": "550e8400-e29b-41d4-a716-446655440000",
@@ -50,7 +48,7 @@ JSON;
 
     public function test_parse_invalid_json_data(): void
     {
-        $jsonData = <<<JSON
+        $jsonData = <<<'JSON'
 ["invalid json":]
 JSON;
 

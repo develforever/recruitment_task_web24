@@ -12,13 +12,12 @@ class CsvParserTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->parser = new CsvParser();
+        $this->parser = new CsvParser;
     }
-
 
     public function test_parse_valid_csv_data(): void
     {
-        $csvData = <<<CSV
+        $csvData = <<<'CSV'
 transaction_id,account_number,transaction_date,amount,currency
 550e8400-e29b-41d4-a716-446655440000,PL12345678901234567890123456,2025-10-14,150000,PLN
 550e8400-e29b-41d4-a716-446655440001,PL98765432109876543210987654,2025-10-13,20050,USD
@@ -34,10 +33,9 @@ CSV;
         $this->assertEquals('PLN', $result[0]['currency']);
     }
 
-
     public function test_parse_single_record(): void
     {
-        $csvData = <<<CSV
+        $csvData = <<<'CSV'
 transaction_id,account_number,transaction_date,amount,currency
 550e8400-e29b-41d4-a716-446655440000,PL12345678901234567890123456,2025-10-14,150000,PLN
 CSV;
@@ -49,10 +47,9 @@ CSV;
         $this->assertArrayHasKey('account_number', $result[0]);
     }
 
-
     public function test_parse_csv_trims_whitespace(): void
     {
-        $csvData = <<<CSV
+        $csvData = <<<'CSV'
 transaction_id, account_number,transaction_date, amount,currency
   550e8400-e29b-41d4-a716-446655440000  ,  PL12345678901234567890123456  ,  2025-10-14  ,  150000  ,  PLN  
 CSV;
@@ -63,10 +60,9 @@ CSV;
         $this->assertEquals('PL12345678901234567890123456', $result[0]['account_number']);
     }
 
-
     public function test_parse_csv_ignores_empty_lines(): void
     {
-        $csvData = <<<CSV
+        $csvData = <<<'CSV'
 transaction_id,account_number,transaction_date,amount,currency
 550e8400-e29b-41d4-a716-446655440000,PL12345678901234567890123456,2025-10-14,150000,PLN
 
@@ -79,10 +75,9 @@ CSV;
         $this->assertCount(2, $result);
     }
 
-
     public function test_parse_csv_throws_exception_on_invalid_columns(): void
     {
-        $csvData = <<<CSV
+        $csvData = <<<'CSV'
 transaction_id,account_number,transaction_date,amount,currency
 550e8400-e29b-41d4-a716-446655440000,PL12345678901234567890123456,2025-10-14,150000
 CSV;
@@ -93,10 +88,9 @@ CSV;
         $this->parser->parse($csvData);
     }
 
-
     public function test_parse_csv_with_only_headers(): void
     {
-        $csvData = <<<CSV
+        $csvData = <<<'CSV'
 transaction_id,account_number,transaction_date,amount,currency
 CSV;
 
@@ -105,10 +99,9 @@ CSV;
         $this->assertCount(0, $result);
     }
 
-
     public function test_parse_csv_preserves_header_case(): void
     {
-        $csvData = <<<CSV
+        $csvData = <<<'CSV'
 transaction_id,account_number,transaction_date,amount,currency
 550e8400-e29b-41d4-a716-446655440000,PL12345678901234567890123456,2025-10-14,150000,PLN
 CSV;
@@ -120,10 +113,9 @@ CSV;
         $this->assertContains('account_number', $keys);
     }
 
-
     public function test_parse_csv_returns_string_types(): void
     {
-        $csvData = <<<CSV
+        $csvData = <<<'CSV'
 transaction_id,account_number,transaction_date,amount,currency
 550e8400-e29b-41d4-a716-446655440000,PL12345678901234567890123456,2025-10-14,150000,PLN
 CSV;
@@ -135,10 +127,9 @@ CSV;
         $this->assertIsString($result[0]['currency']);
     }
 
-
     public function test_parse_csv_with_special_characters(): void
     {
-        $csvData = <<<CSV
+        $csvData = <<<'CSV'
 transaction_id,account_number,transaction_date,amount,currency
 550e8400-e29b-41d4-a716-446655440000,PL12345678901234567890123456,2025-10-14,"150,000",PLN
 CSV;
@@ -149,7 +140,7 @@ CSV;
 
     public function test_parse_csv_with_wrong_currency(): void
     {
-        $csvData = <<<CSV
+        $csvData = <<<'CSV'
 transaction_id,account_number,transaction_date,amount,currency
 550e8400-e29b-41d4-a716-446655440000,PL12345678901234567890123456,2025-10-14,"150,000",abcd
 CSV;
@@ -158,10 +149,9 @@ CSV;
         $this->assertEquals('abcd', $result[0]['currency']);
     }
 
-
     public function test_parse_csv_with_many_records(): void
     {
-        $records = ["transaction_id,account_number,transaction_date,amount,currency"];
+        $records = ['transaction_id,account_number,transaction_date,amount,currency'];
 
         for ($i = 0; $i < 100; $i++) {
             $records[] = "550e8400-e29b-41d4-a716-44665544000{$i},PL12345678901234567890123456,2025-10-14,150000,PLN";

@@ -2,7 +2,6 @@
 
 namespace Tests\Unit\Services\FileParser;
 
-
 use App\Services\FileParser\XmlParser;
 use PHPUnit\Framework\TestCase;
 
@@ -13,13 +12,12 @@ class XmlParserTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->parser = new XmlParser();
+        $this->parser = new XmlParser;
     }
-
 
     public function test_parse_valid_xml_data(): void
     {
-        $xmlData = <<<XML
+        $xmlData = <<<'XML'
 <transactions>
     <transaction>
         <transaction_id>550e8400-e29b-41d4-a716-446655440000</transaction_id>
@@ -49,7 +47,7 @@ XML;
 
     public function test_parse_invalid_xml_data(): void
     {
-        $xmlData = <<<XML
+        $xmlData = <<<'XML'
 <invalid><xml></invalid>
 XML;
         $result = $this->parser->parse($xmlData);

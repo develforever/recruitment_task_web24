@@ -34,7 +34,7 @@ class ImportService
                 'trace' => $e->getTraceAsString(),
             ]);
             $import->update(['status' => Import::STATUS_FAILED]);
-            throw new \RuntimeException('Failed to parse file: ' . $e->getMessage(), previous: $e);
+            throw new \RuntimeException('Failed to parse file: '.$e->getMessage(), previous: $e);
         }
 
         $total = count($records);
@@ -50,7 +50,7 @@ class ImportService
             ]);
 
             foreach ($records as $idx => $row) {
-                $row = array_map(fn($v) => is_string($v) ? trim($v) : $v, $row);
+                $row = array_map(fn ($v) => is_string($v) ? trim($v) : $v, $row);
                 $row['import_id'] = $import->id;
 
                 try {
@@ -151,7 +151,7 @@ class ImportService
             'csv' => (new CsvParser)->parse($contents),
             'json' => (new JsonParser)->parse($contents),
             'xml' => (new XmlParser)->parse($contents),
-            default => throw new \RuntimeException('Unsupported file type "' . $ext . '"'),
+            default => throw new \RuntimeException('Unsupported file type "'.$ext.'"'),
         };
     }
 
@@ -180,7 +180,7 @@ class ImportService
         ]);
 
         if ($validator->stopOnFirstFailure()->fails()) {
-            throw new \RuntimeException('Validation failed: ' . implode('; ', $validator->errors()->all()));
+            throw new \RuntimeException('Validation failed: '.implode('; ', $validator->errors()->all()));
         }
 
         return $validator->validated();

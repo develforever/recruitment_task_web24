@@ -12,6 +12,7 @@ class XmlParser extends AbstractParser
         $xml = simplexml_load_string($contents, 'SimpleXMLElement', LIBXML_NOCDATA);
         if ($xml === false) {
             libxml_clear_errors();
+
             return [];
         }
 

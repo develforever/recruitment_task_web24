@@ -4,25 +4,24 @@ namespace Tests\Unit\Services;
 
 use App\Services\ImportService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Mockery\MockInterface;
 use Tests\TestCase;
 
 class ImportServiceTest extends TestCase
 {
-
     use RefreshDatabase;
+
     private ImportService $service;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new ImportService();
+        $this->service = new ImportService;
     }
 
     public function test_validate_row_with_invalid_account_number()
     {
 
-         $row = [
+        $row = [
             'transaction_id' => '550e8400-e29b-41d4-a716-446655440000',
             'account_number' => 'AU12345678901234567890123456',
             'transaction_date' => '2025-10-14',
@@ -41,7 +40,7 @@ class ImportServiceTest extends TestCase
     public function test_validate_row_with_invalid_amount()
     {
 
-         $row = [
+        $row = [
             'transaction_id' => '550e8400-e29b-41d4-a716-446655440000',
             'account_number' => 'PL12345678901234567890123456',
             'transaction_date' => '2025-10-14',
@@ -60,7 +59,7 @@ class ImportServiceTest extends TestCase
     public function test_validate_row_with_invalid_amount_format()
     {
 
-         $row = [
+        $row = [
             'transaction_id' => '550e8400-e29b-41d4-a716-446655440000',
             'account_number' => 'PL12345678901234567890123456',
             'transaction_date' => '2025-10-14',
@@ -79,7 +78,7 @@ class ImportServiceTest extends TestCase
     public function test_validate_row_with_invalid_transaction_date()
     {
 
-         $row = [
+        $row = [
             'transaction_id' => '550e8400-e29b-41d4-a716-446655440000',
             'account_number' => 'PL12345678901234567890123456',
             'transaction_date' => '2025.1014',
@@ -95,11 +94,10 @@ class ImportServiceTest extends TestCase
 
     }
 
-
     public function test_validate_row_with_invalid_transaction_id()
     {
 
-         $row = [
+        $row = [
             'transaction_id' => '550e8e29b4446655440000',
             'account_number' => 'PL12345678901234567890123456',
             'transaction_date' => '2025.1014',
@@ -124,6 +122,4 @@ class ImportServiceTest extends TestCase
         $this->service->parseRecords('txt', '');
 
     }
-
-
 }
