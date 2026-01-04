@@ -15,7 +15,7 @@ class CsvParserTest extends TestCase
         $this->parser = new CsvParser();
     }
 
-    
+
     public function test_parse_valid_csv_data(): void
     {
         $csvData = <<<CSV
@@ -144,8 +144,18 @@ transaction_id,account_number,transaction_date,amount,currency
 CSV;
 
         $result = $this->parser->parse($csvData);
+        $this->assertEquals('150,000', $result[0]['amount']);
+    }
 
-        $this->assertEquals('"150,000"', $result[0]['amount']);
+    public function test_parse_csv_with_wrong_currency(): void
+    {
+        $csvData = <<<CSV
+transaction_id,account_number,transaction_date,amount,currency
+550e8400-e29b-41d4-a716-446655440000,PL12345678901234567890123456,2025-10-14,"150,000",abcd
+CSV;
+
+        $result = $this->parser->parse($csvData);
+        $this->assertEquals('abcd', $result[0]['currency']);
     }
 
 

@@ -34,7 +34,7 @@ class ImportService
                 'trace' => $e->getTraceAsString(),
             ]);
             $import->update(['status' => Import::STATUS_FAILED]);
-            throw new \RuntimeException('Failed to parse file: '.$e->getMessage(), previous: $e);
+            throw new \RuntimeException('Failed to parse file: ' . $e->getMessage(), previous: $e);
         }
 
         $total = count($records);
@@ -50,14 +50,21 @@ class ImportService
             ]);
 
             foreach ($records as $idx => $row) {
-                $row = array_map(fn ($v) => is_string($v) ? trim($v) : $v, $row);
+                $row = array_map(fn($v) => is_string($v) ? trim($v) : $v, $row);
                 $row['import_id'] = $import->id;
 
                 try {
+
                     $validated = $this->validateRow($row);
                 } catch (\Throwable $e) {
+
+                    Log::error('Import row failed', [
+                        'import_id' => $row['import_id'] ?? null,
+                        'row' => $row,
+                        'error' => $e->getMessage(),
+                    ]);
                     ImportLog::create([
-                        'import_id' => $import->id,
+                        'import_id' => $row['import_id'] ?? null,
                         'transaction_id' => $row['transaction_id'] ?? Str::uuid(),
                         'error_message' => $e->getMessage(),
                     ]);
@@ -138,13 +145,13 @@ class ImportService
         Storage::delete($filePath);
     }
 
-    private function parseRecords(string $ext, string $contents): array
+    public function parseRecords(string $ext, string $contents): array
     {
         return match ($ext) {
             'csv' => (new CsvParser)->parse($contents),
             'json' => (new JsonParser)->parse($contents),
             'xml' => (new XmlParser)->parse($contents),
-            default => throw new \RuntimeException('Unsupported file type'),
+            default => throw new \RuntimeException('Unsupported file type "' . $ext . '"'),
         };
     }
 
@@ -162,29 +169,18 @@ class ImportService
         return $ids;
     }
 
-    private function validateRow(array $row): array
+    public function validateRow(array $row): array
     {
         $validator = Validator::make($row, [
-            'transaction_id' => ['required', 'string', 'min:1', 'max:255'],
+            'transaction_id' => ['required', 'uuid:4'],
             'account_number' => ['required', 'regex:/^PL\d{26}$/'],
             'transaction_date' => ['required', 'date'],
-            'amount' => ['required', 'integer', 'min:1'],
+            'amount' => ['required', 'numeric', 'regex:/^\d+$/', 'min:1'],
             'currency' => ['required', 'regex:/^[A-Z]{3}$/'],
         ]);
 
-        if ($validator->fails()) {
-            Log::error('Import row failed', [
-                'import_id' => $row['import_id'] ?? null,
-                'row' => $row,
-                'error' => implode('; ', $validator->errors()->all()),
-            ]);
-            ImportLog::create([
-                'import_id' => $row['import_id'] ?? null,
-                'transaction_id' => $row['transaction_id'] ?? Str::uuid(),
-                'error_message' => implode('; ', $validator->errors()->all()),
-            ]);
-
-            throw new \RuntimeException('Validation failed: '.implode('; ', $validator->errors()->all()));
+        if ($validator->stopOnFirstFailure()->fails()) {
+            throw new \RuntimeException('Validation failed: ' . implode('; ', $validator->errors()->all()));
         }
 
         return $validator->validated();
