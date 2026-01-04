@@ -119,7 +119,7 @@ watch(page, () => {
                         Zacznij od dodania pierwszego importu transakcji
                         bankowych
                     </p>
-                    <Link href="/imports/upload" class="btn-primary">
+                    <Link href="/upload" class="btn-primary">
                         Utwórz nowy import
                     </Link>
                 </div>

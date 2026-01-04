@@ -36,104 +36,125 @@ class ImportService
                 'trace' => $e->getTraceAsString(),
             ]);
             $import->update(['status' => Import::STATUS_FAILED]);
-            throw new \RuntimeException('Failed to parse file: '.$e->getMessage(), previous: $e);
+            throw new \RuntimeException('Failed to parse file: ' . $e->getMessage(), previous: $e);
         }
 
         $total = count($records);
         $success = 0;
         $failed = 0;
+        $status = $import->status;
+
+        $import->update([
+            'total_records' => $total,
+        ]);
+
+        ImportProgressUpdated::dispatch(
+            $import,
+            0,
+            $total,
+            Import::STATUS_PROCESSING,
+            $success,
+            $failed
+        );
 
         $existingIds = $this->fetchExistingTransactionIds(array_column($records, 'transaction_id'));
 
-        DB::transaction(function () use ($import, $total, $records, &$existingIds, &$success, &$failed) {
+        $batchSize = 100;
+        $currentRecord = 0;
 
-            $import->update([
-                'total_records' => $total,
-            ]);
+        foreach (array_chunk($records, $batchSize) as $batchIdx => $batch) {
 
-            foreach ($records as $idx => $row) {
-                $row = array_map(fn ($v) => is_string($v) ? trim($v) : $v, $row);
-                $row['import_id'] = $import->id;
+            DB::transaction(function () use ($import, $total, $batch, &$existingIds, &$success, &$failed, &$currentRecord, $batchIdx, $batchSize) {
 
-                try {
+                foreach ($batch as $idx => $row) {
+                    $currentRecord = $batchIdx * $batchSize + $idx + 1;
 
-                    $validated = $this->validateRow($row);
-                } catch (\Throwable $e) {
+                    $row = array_merge($this->getDefaultRowShape(), $row);
+                    $row = array_map(fn($v) => is_string($v) ? trim($v) : $v, $row);
+                    $row['import_id'] = $import->id;
 
-                    Log::error('Import row failed', [
-                        'import_id' => $row['import_id'],
-                        'row' => $row,
-                        'error' => $e->getMessage(),
-                    ]);
-                    ImportLog::create([
-                        'import_id' => $row['import_id'],
-                        'transaction_id' => $row['transaction_id'],
-                        'error_message' => $e->getMessage(),
-                    ]);
-                    $failed++;
+                    try {
 
-                    continue;
-                }
+                        $validated = $this->validateRow($row);
+                    } catch (\Throwable $e) {
 
-                if (isset($existingIds[$validated['transaction_id']])) {
-                    Log::error('Import row failed', [
-                        'import_id' => $import->id,
-                        'row' => $row,
-                        'error' => 'Duplicate transaction_id',
-                    ]);
-                    ImportLog::create([
-                        'import_id' => $import->id,
+                        Log::error('Import row validation failed', [
+                            'import_id' => $row['import_id'],
+                            'row' => $row,
+                            'error' => $e->getMessage(),
+                        ]);
+                        ImportLog::create([
+                            'import_id' => $row['import_id'],
+                            'transaction_id' => $row['transaction_id'],
+                            'error_message' => $e->getMessage(),
+                        ]);
+                        $failed++;
+
+                        continue;
+                    }
+
+                    if (isset($existingIds[$validated['transaction_id']])) {
+                        Log::error('Import row transaction id exists', [
+                            'import_id' => $import->id,
+                            'row' => $row,
+                            'error' => 'Duplicate transaction_id',
+                        ]);
+                        ImportLog::create([
+                            'import_id' => $import->id,
+                            'transaction_id' => $validated['transaction_id'],
+                            'error_message' => 'Duplicate transaction_id',
+                        ]);
+                        $failed++;
+
+                        continue;
+                    }
+
+                    Transaction::create([
                         'transaction_id' => $validated['transaction_id'],
-                        'error_message' => 'Duplicate transaction_id',
+                        'account_number' => $validated['account_number'],
+                        'transaction_date' => $validated['transaction_date'],
+                        'amount' => $validated['amount'],
+                        'currency' => $validated['currency'],
                     ]);
-                    $failed++;
 
-                    continue;
+                    $existingIds[$validated['transaction_id']] = true;
+                    $success++;
+                    $import->update([
+                        'successful_records' => $success,
+                        'failed_records' => $failed,
+                    ]);
+
+                    if (($currentRecord + 1) % 10 === 0) {
+                        ImportProgressUpdated::dispatch(
+                            $import,
+                            $success + $failed,
+                            $total,
+                            Import::STATUS_PROCESSING,
+                            $success,
+                            $failed
+                        );
+                    }
                 }
+            });
+        }
 
-                Transaction::create([
-                    'transaction_id' => $validated['transaction_id'],
-                    'account_number' => $validated['account_number'],
-                    'transaction_date' => $validated['transaction_date'],
-                    'amount' => $validated['amount'],
-                    'currency' => $validated['currency'],
-                ]);
+        $status = $failed === 0 ? Import::STATUS_SUCCESS : ($success === 0 ? Import::STATUS_FAILED : Import::STATUS_PARTIAL);
 
-                $existingIds[$validated['transaction_id']] = true;
-                $success++;
-                $import->update([
-                    'successful_records' => $success,
-                    'failed_records' => $failed,
-                ]);
+        $import->update([
+            'total_records' => $total,
+            'successful_records' => $success,
+            'failed_records' => $failed,
+            'status' => $status,
+        ]);
 
-                if ($idx % 10 === 0 || $idx === $total - 1) {
-                    ImportProgressUpdated::dispatch(
-                        $import,
-                        $idx + 1,
-                        $total,
-                        Import::STATUS_PROCESSING
-                    );
-                }
-
-                DB::commit();
-            }
-
-            $status = $failed === 0 ? Import::STATUS_SUCCESS : ($success === 0 ? Import::STATUS_FAILED : Import::STATUS_PARTIAL);
-
-            $import->update([
-                'total_records' => $total,
-                'successful_records' => $success,
-                'failed_records' => $failed,
-                'status' => $status,
-            ]);
-
-            ImportProgressUpdated::dispatch(
-                $import,
-                $total,
-                $total,
-                $status
-            );
-        });
+        ImportProgressUpdated::dispatch(
+            $import,
+            $total,
+            $total,
+            $status,
+            $success,
+            $failed
+        );
 
         Storage::delete($filePath);
     }
@@ -149,8 +170,23 @@ class ImportService
             'csv' => (new CsvParser)->parse($contents),
             'json' => (new JsonParser)->parse($contents),
             'xml' => (new XmlParser)->parse($contents),
-            default => throw new \RuntimeException('Unsupported file type "'.$ext.'"'),
+            default => throw new \RuntimeException('Unsupported file type "' . $ext . '"'),
         };
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function getDefaultRowShape(): array
+    {
+        return [
+            'transaction_id' => null,
+            'account_number' => null,
+            'transaction_date' => null,
+            'amount' => null,
+            'currency' => null,
+            'import_id' => null,
+        ];
     }
 
     /**
@@ -186,7 +222,7 @@ class ImportService
         ]);
 
         if ($validator->stopOnFirstFailure()->fails()) {
-            throw new \RuntimeException('Validation failed: '.implode('; ', $validator->errors()->all()));
+            throw new \RuntimeException('Validation failed: ' . implode('; ', $validator->errors()->all()));
         }
 
         return $validator->validated();

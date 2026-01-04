@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('import_logs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('import_id')->constrained('imports')->cascadeOnDelete();
-            $table->string('transaction_id');
+            $table->string('transaction_id')->nullable();
             $table->text('error_message');
             $table->timestamps();
         });

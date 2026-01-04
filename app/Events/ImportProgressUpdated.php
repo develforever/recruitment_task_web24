@@ -19,6 +19,8 @@ class ImportProgressUpdated implements ShouldBroadcast
         public int $currentRecord,
         public int $totalRecords,
         public string $status,
+        public int $successfulRecords = 0,
+        public int $failedRecords = 0,
         public ?string $lastError = null,
     ) {}
 
@@ -28,7 +30,6 @@ class ImportProgressUpdated implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new Channel('import.'.$this->import->id),
             new PrivateChannel('import-progress'),
         ];
     }
@@ -50,8 +51,8 @@ class ImportProgressUpdated implements ShouldBroadcast
             'percentage' => $this->currentRecord ? round(($this->currentRecord / $this->totalRecords) * 100) : 0,
             'status' => $this->status,
             'last_error' => $this->lastError,
-            'successful_records' => $this->import->successful_records,
-            'failed_records' => $this->import->failed_records,
+            'successful_records' => $this->successfulRecords,
+            'failed_records' => $this->failedRecords,
         ];
     }
 }

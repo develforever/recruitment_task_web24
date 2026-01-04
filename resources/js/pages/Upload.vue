@@ -29,8 +29,15 @@ interface ImportResult {
 
 const result = ref<ImportResult | null>(null);
 const uploadProgress = ref(0);
+const processingProgress = ref(0);
+const lastError = ref<string | null>(null);
 
 const submit = async () => {
+
+    processingProgress.value = 0;
+    lastError.value = null;
+    uploadProgress.value = 0;
+
     try {
         const data = new FormData();
         data.append('file', form.file);
@@ -112,7 +119,8 @@ useEcho<ImportProgressEvent>(`import-progress`, '.progress-updated', (e) => {
     result.value.successful_records = e.successful_records;
     result.value.failed_records = e.failed_records;
     result.value.total_records = e.total_records;
-    uploadProgress.value = e.percentage;
+    lastError.value = e.last_error;
+    processingProgress.value = e.percentage;
 });
 </script>
 
@@ -169,6 +177,12 @@ useEcho<ImportProgressEvent>(`import-progress`, '.progress-updated', (e) => {
                     >
                         <p class="text-sm">{{ form.errors.file }}</p>
                     </div>
+                    <div
+                        v-if="lastError"
+                        class="form-error rounded-md border border-destructive/30 bg-destructive/10 p-3"
+                    >
+                        <p class="text-sm">{{ lastError }}</p>
+                    </div>
 
                     <!-- Progress bar -->
                     <div
@@ -185,6 +199,25 @@ useEcho<ImportProgressEvent>(`import-progress`, '.progress-updated', (e) => {
                         </div>
                         <progress
                             :value="uploadProgress"
+                            max="100"
+                            class="w-full"
+                        ></progress>
+                    </div>
+
+                    <div
+                        v-if="processingProgress > 0 && processingProgress < 100"
+                        class="space-y-2"
+                    >
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-muted-foreground"
+                                >Przetwarzanie pliku...</span
+                            >
+                            <span class="font-semibold text-primary"
+                                >{{ processingProgress }}%</span
+                            >
+                        </div>
+                        <progress
+                            :value="processingProgress"
                             max="100"
                             class="w-full"
                         ></progress>

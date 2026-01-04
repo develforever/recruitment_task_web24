@@ -2,10 +2,12 @@
 
 namespace App\Jobs;
 
+use App\Events\ImportProgressUpdated;
 use App\Models\Import;
 use App\Models\User;
 use App\Services\ImportService;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
@@ -14,11 +16,11 @@ use Throwable;
 
 class ProcessImportJob implements ShouldQueue
 {
-    use InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 3;
 
-    public int $timeout = 300;
+    public int $timeout = 600;
 
     public int $maxExceptions = 3;
 
@@ -66,6 +68,14 @@ class ProcessImportJob implements ShouldQueue
             'status' => Import::STATUS_FAILED,
         ]);
 
-        // $this->user->notify(new ImportFailedNotification($this->import));
+        ImportProgressUpdated::dispatch(
+            $this->import,
+            0,
+            $this->import->total_records,
+            Import::STATUS_FAILED,
+            $this->import->successful_records ?? 0,
+            $this->import->failed_records ?? 0,
+            $exception->getMessage()
+        );
     }
 }
