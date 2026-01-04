@@ -1,4 +1,14 @@
 
+# Pierwsze uruchomienie (Linux)
+
+Wykonaj polecenia:
+
+```
+compose run setup
+compose run dev
+```
+
+Zarejestruj nowe konto pod adresem `http://localhost:8000/register` i zaloguj się do panelu aplikacji.
 
 # Środowisko uruchomieniowe
 
@@ -95,12 +105,3 @@ Ubuntu 6.6.87.2-microsoft-standard-WSL2 #1 SMP PREEMPT_DYNAMIC Thu Jun  5 18:30:
 ```
 
 
-# Pierwsze uruchomienie (Linux)
-
-Wykonaj polecenia:
-
-```
-compose run setup
-```
-
-Zarejestruj nowe konto pod adresem `http://localhost:8000/register` i zaloguj się do panelu aplikacji.
