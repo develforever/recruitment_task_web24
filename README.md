@@ -100,27 +100,7 @@ Ubuntu 6.6.87.2-microsoft-standard-WSL2 #1 SMP PREEMPT_DYNAMIC Thu Jun  5 18:30:
 Wykonaj polecenia:
 
 ```
-mv .env.dist .env
-docker compose up -d
-composer install
-npm install
-php artisan migrate
-php artisan tinker
+compose run setup
 ```
 
-W konsoli wpisz i wykonaj:
-```
-User::create([
-    'name' => 'John Doe',
-    'email' => 'john@example.com',
-    'password' => bcrypt('password123')
-]);
-```
-
-Uruchom serwer np.:
-
-```
-composer run dev
-```
-
-Otwórz adres `http://localhost:8000/login` i zaloguj sie na powyrzsze konto lub zarejestruj nowe pod adresem `http://localhost:8000/register`
+Zarejestruj nowe pod adresem `http://localhost:8000/register` i zaloguj się do panelu aplikacji.
